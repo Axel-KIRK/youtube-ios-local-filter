@@ -15,11 +15,17 @@ Ce parcours est un objectif ; le prototype validé dépend encore du Mac. Une di
 
 La suppression par domaine et le filtre média par ID ne doivent pas devenir le mécanisme principal de l'app : ils ont échoué à assurer la lecture sans pub lors du prototype.
 
-## Contrainte réseau à résoudre
+## Un proxy autonome existe déjà sur iOS
+
+**Oui, une app peut proposer un proxy HTTPS local sans Mac.** Charles pour iOS et Proxyman pour iOS documentent ce fonctionnement et une distribution App Store. Charles demande l'autorisation d'une configuration VPN, puis l'installation et la confiance de son certificat. Proxyman explique que son VPN dirige le trafic vers un serveur MITM local au téléphone. Ces exemples établissent la faisabilité d'un proxy autonome ; ils ne valident pas encore notre réécriture YouTube dans ce contexte. [Charles, installation](https://www.charlesproxy.com/documentation/ios/getting-started-1/), [Proxyman, architecture et certificat](https://github.com/ProxymanApp/docs/blob/main/proxyman-ios/vpn-and-proxyman-certificate.md)
+
+Le parcours visé est donc : installer notre app, autoriser sa configuration VPN, installer et approuver son certificat une fois, puis activer le filtre. YouTube n'est pas réinstallée. Une version distribuée normalement ne demande pas le mode développeur ; ce mode concerne les essais de développement et de diagnostic.
+
+## Contrainte réseau à résoudre dans notre code
 
 Une app ordinaire ne reçoit pas automatiquement les réponses HTTPS des autres apps. Un bloqueur Safari ne traite pas le trafic de YouTube officielle. Un filtre d'URL ou de domaine seul ne donne pas la réécriture du corps Protobuf nécessaire ici.
 
-`NEPacketTunnelProvider` est une piste d'expérimentation technique, mais Apple indique explicitement que l'utiliser comme filtre de contenu ou hôte d'un proxy local ne correspond pas à ses usages pris en charge. Les alternatives Network Extension ont leurs propres contraintes de déploiement ; elles ne constituent pas automatiquement une solution de réécriture HTTPS sur tout iPhone personnel. **Aucune architecture VPN local autonome ni acceptation App Store n'est donc déclarée acquise.** [TN3120](https://developer.apple.com/documentation/technotes/tn3120-expected-use-cases-for-network-extension-packet-tunnel-providers), [TN3134](https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment)
+`NEPacketTunnelProvider` est une piste d'expérimentation technique. Apple indique néanmoins que l'utiliser comme filtre de contenu ou hôte d'un proxy local ne correspond pas à ses usages pris en charge. Cette réserve documentaire **ne prouve pas l'impossibilité technique ou une interdiction de tout proxy iOS**, comme le montrent les applications existantes. Elle oblige à distinguer fonctionnement pratique, architecture officiellement prise en charge et acceptation de notre propre produit. Les contraintes des autres fournisseurs Network Extension doivent aussi être vérifiées. [TN3120](https://developer.apple.com/documentation/technotes/tn3120-expected-use-cases-for-network-extension-packet-tunnel-providers), [TN3134](https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment)
 
 Un vrai VPN vers un serveur distant serait une autre architecture, avec serveur, coûts et trafic tiers ; ce n'est pas le fonctionnement local visé et il n'est pas déployé dans ce projet. Un proxy dans l'app principale qui disparaît dès qu'iOS la suspend ne satisfait pas non plus le besoin.
 

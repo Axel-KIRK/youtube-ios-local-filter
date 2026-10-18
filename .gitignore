@@ -23,4 +23,4 @@ reference/proxy/inspection/video-identities.json
 *.jsonl
 *.log
 local-evidence/
-
+ios/*.xcodeproj/

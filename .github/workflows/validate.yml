@@ -1,0 +1,43 @@
+name: Validate
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift engine tests
+        run: swift test
+      - name: Generate iOS project
+        run: |
+          brew install xcodegen
+          xcodegen generate --spec ios/project.yml
+      - name: Compile iOS simulator app
+        run: >-
+          xcodebuild -project ios/LocalFilter.xcodeproj -scheme LocalFilter
+          -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build
+  reference:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install reference dependencies
+        run: python -m pip install -r reference/requirements-https.lock.txt
+      - name: Test published reference
+        working-directory: reference/proxy
+        env:
+          PYTHONPATH: dashboard
+        run: >-
+          python -m unittest inspection.test_ad_program inspection.test_navigation
+          inspection.test_https_filter inspection.test_ump_filter inspection.test_ump_inspect
+          inspection.test_api_inspect test_flow_metrics dashboard.test_annotations -q
+      - name: Rebuild synthetic fixtures
+        run: |
+          python scripts/generate-fixtures.py
+          git diff --exit-code -- Tests/LocalFilterCoreTests/Fixtures

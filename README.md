@@ -15,8 +15,16 @@ Ce résultat porte sur une session, avec un certificat local approuvé sur l'iPh
 - [Compte rendu précis des essais et résultat final](docs/EXPERIMENTS-2026-10-18.md)
 - [Reproduire le prototype et revenir en arrière](docs/REPRODUCE.md)
 - [Architecture iOS, parcours utilisateur et travail restant](docs/IOS-ARCHITECTURE.md)
+- [Moteur Swift, app de vérification et compilation](docs/DEVELOPMENT.md)
 - [Mesures publiables de la session](evidence/session-summary.json)
 - [Code Python du prototype testé](reference/proxy/)
 
 Le dépôt ne contient ni certificat privé, ni cookies, ni requêtes authentifiées, ni vidéos, ni captures d'écran personnelles. Les fixtures de tests sont synthétiques. La publication du code ne constitue pas une application signée ou une disponibilité sur l'App Store.
 
+## Première implémentation iOS
+
+Le moteur est porté dans `Sources/LocalFilterCore` : Protobuf, flux UMP, enveloppes Onesie 0/25, authentification, réécriture et conservation des médias. `ios/App` contient une première interface SwiftUI qui vérifie ce traitement avec des données fictives. Le raccordement au trafic réel de YouTube et le parcours d'installation du certificat restent à implémenter. L'interface indique donc **filtre inactif**.
+
+```sh
+swift test
+```

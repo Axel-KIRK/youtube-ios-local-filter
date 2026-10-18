@@ -10,6 +10,8 @@ On an **iPhone SE (3rd generation), iOS 18.6.1 (22G90)**, the proxy removed adve
 
 This result covers one session with a local certificate explicitly trusted on the iPhone. It does not measure how many ads were prevented. A final ambiguous report of a stall remains unresolved and is preserved in the experiment report.
 
+A later test using the **Swift HTTPS proxy and engine** also started videos without ads on the same phone. During the recorded window it rewrote 21 responses and passed 40 successful media responses. The Mac was still required. Three unclassified upstream failures were logged; they are preserved in the [Swift session record](evidence/swift-proxy-session.json), not hidden by the positive user report.
+
 ## Documentation
 
 - [Detailed experiments and final findings](docs/EXPERIMENTS-2026-10-18.md)
@@ -17,6 +19,8 @@ This result covers one session with a local certificate explicitly trusted on th
 - [iOS architecture, user setup, and remaining work](docs/IOS-ARCHITECTURE.md)
 - [Swift engine, verification app, and build instructions](docs/DEVELOPMENT.md)
 - [Swift HTTPS proxy and transport checks](docs/SWIFT-PROXY.md)
+- [Native extension setup and device validation](docs/NATIVE-PROTOTYPE.md)
+- [Apple signing and App Store assessment](docs/APPLE-DISTRIBUTION.md)
 - [Publishable session measurements](evidence/session-summary.json)
 - [Python source of the tested prototype](reference/proxy/)
 
@@ -24,11 +28,11 @@ This repository contains no private certificate keys, cookies, authenticated req
 
 ## Initial iOS implementation
 
-The engine has been ported to `Sources/LocalFilterCore`: Protobuf, UMP streams, Onesie 0/25 envelopes, authentication, rewriting, and media preservation. `ios/App` contains an initial SwiftUI interface that checks this processing with synthetic data. Connecting it to live YouTube traffic and implementing certificate setup remain outstanding. The interface therefore shows **Filter inactive**.
+The engine has been ported to `Sources/LocalFilterCore`: Protobuf, UMP streams, Onesie 0/25 envelopes, authentication, rewriting, and media preservation. `ios/App` now includes an experimental connection setup, certificate installation guide, start/stop controls, and a synthetic engine check. `ios/Tunnel` connects the HTTPS proxy to a Network Extension, stores its authority in Keychain, and reports aggregate activity. **This on-device transport has not yet been provisioned or validated on an iPhone.** See the [native prototype procedure](docs/NATIVE-PROTOTYPE.md).
 
-`Sources/LocalFilterTransport` now connects that engine to a scoped HTTPS proxy, runnable on a Mac as `local-filter-proxy`. A verified TLS round trip to Google's API succeeds. New synthetic transport integration tests are included; an autonomous on-device test is still outstanding.
+`Sources/LocalFilterTransport` now connects that engine to a scoped HTTPS proxy, runnable on a Mac as `local-filter-proxy`. A real iPhone playback session succeeded through this backend, alongside synthetic TLS integration tests; an autonomous on-device test is still outstanding.
 
-October 18 validation: **16 Swift tests and 48 Python tests passed**, regenerated fixtures were identical, and the app compiled successfully for the iOS simulator. See the [preserved validation record](evidence/native-validation.json) for the tested revision and CI run. No standalone filtering test on an iPhone is claimed yet.
+October 18 validation: **24 Swift tests (including 7 transport integration tests) and 48 Python tests passed**, regenerated fixtures were identical, and the app compiled successfully for the iOS simulator. See the [preserved validation record](evidence/native-validation.json) for the tested revision and CI run. No standalone filtering test on an iPhone is claimed yet.
 
 ```sh
 swift test

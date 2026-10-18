@@ -115,8 +115,15 @@ final class ResponseRelay: ChannelInboundHandler {
         }
     }
 
+    func cancel() {
+        guard !done else { return }
+        done = true; completed()
+        server.log("request_cancelled host=\(host) path=\(safePath)")
+    }
+
     func fail() {
         guard !done else { return }
+        guard downstream.isActive else { cancel(); return }
         done = true; completed()
         server.log("upstream_failed host=\(host) path=\(safePath)")
         if sentHead { downstream.close(promise: nil) }

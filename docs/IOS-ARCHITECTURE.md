@@ -43,4 +43,8 @@ Trusting a manually installed certificate requires an action in Settings. The ap
 
 ## Implementation sequence
 
-The first increment ported the real engine to Swift and created a local verification app, compiled for the iOS simulator. It shows “Filter inactive” until it can access YouTube traffic. Network integration and distribution are the next milestone; a VPN shell that accepts a connection but forwards no packets would be a defect, not progress. See the [implementation status and checks](DEVELOPMENT.md).
+The first increment ported the real engine to Swift and created a local verification app, compiled for the iOS simulator. It shows “Filter inactive” until it can access YouTube traffic. Network integration and distribution follow that first increment; a VPN shell that claims default routes but forwards no packets would be a defect, not progress. See the [implementation status and checks](DEVELOPMENT.md).
+
+The next increment adds a [working Swift HTTPS backend](SWIFT-PROXY.md) for desktop validation. It has not yet demonstrated autonomous filtering on an iPhone. See the separate [Apple signing and distribution assessment](APPLE-DISTRIBUTION.md) for activation, Xcode compatibility, account type, and App Review constraints.
+
+The current native increment implements a proxy-only provider with no default IP routes, explicit YouTube proxy domains, Keychain authority storage, certificate setup, and start/stop/status UI. This is an **experimental device-validation path**, not a supported packet-tunnel architecture or a proven standalone blocker. Routing behavior, suspension, trust, resource use, and signing remain unverified. See [native setup and acceptance criteria](NATIVE-PROTOTYPE.md).

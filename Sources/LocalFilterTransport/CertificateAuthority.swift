@@ -49,6 +49,12 @@ public final class CertificateAuthority {
         return (try certificate.serializeAsPEM().pemString, raw.pemRepresentation)
     }
 
+    /// Public certificate only, suitable for the explicit iOS installation step.
+    public func certificateDER() throws -> Data {
+        let bytes = try NIOSSLCertificate.fromPEMBytes(Array(certificate.serializeAsPEM().pemString.utf8))
+        return Data(try bytes[0].toDERBytes())
+    }
+
     func serverContext(host: String) throws -> NIOSSLContext {
         guard DestinationPolicy.isTarget(host) else { throw TransportError.destinationDenied }
         if let cached = contexts[host] { return cached }

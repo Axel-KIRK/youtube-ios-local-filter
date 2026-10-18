@@ -28,6 +28,31 @@ final class TransportTests: XCTestCase {
         XCTAssertThrowsError(try CertificateAuthority(certificatePEM: a.certificatePEM, privateKeyPEM: b.privateKeyPEM))
     }
 
+    func testPublicCertificateDownloadIsExplicitAndLimited() throws {
+        let disabled = try Lab { _ in Reply(Data()) }
+        defer { disabled.stop() }
+        XCTAssertEqual(try disabled.fetch("http://127.0.0.1:\(disabled.port)/certificate.cer", useProxy: false).status, 403)
+        let enabled = try Lab(servesCertificate: true) { _ in Reply(Data()) }
+        defer { enabled.stop() }
+        let response = try enabled.fetch("http://127.0.0.1:\(enabled.port)/certificate.cer", useProxy: false)
+        XCTAssertEqual(response.status, 200)
+        XCTAssertEqual(response.body, enabled.publicDER)
+        XCTAssertTrue(response.headers.contains("application/x-x509-ca-cert"))
+        XCTAssertEqual(try enabled.fetch("http://127.0.0.1:\(enabled.port)/ca-key.pem", useProxy: false).status, 403)
+    }
+
+    func testDownstreamCancellationDoesNotReportUpstreamFailure() throws {
+        let cancelled = expectation(description: "client cancellation classified")
+        let lab = try Lab(log: { event in
+            if event.hasPrefix("request_cancelled ") { cancelled.fulfill() }
+            XCTAssertFalse(event.hasPrefix("upstream_failed "), event)
+        }) { _ in Reply(Data(repeating: 1, count: 1024), fragment: 1, delayMilliseconds: 2000) }
+        defer { lab.stop() }
+        let response = try lab.fetch("https://youtubei.googleapis.com/unrelated", allowCurlFailure: true, maxTime: 0.5)
+        XCTAssertEqual(response.exitCode, 28) // curl timeout abandons an otherwise healthy upstream response.
+        wait(for: [cancelled], timeout: 2)
+    }
+
     func testTLSPlayerRewriteGzipAndUnrelatedResponse() throws {
         let clean = Wire.field(2, Data()) + Wire.field(11, Wire.field(1, Data("demoVideo01".utf8)))
         let original = clean + Wire.field(7, Data([1])) + Wire.field(68, Data([2]))
@@ -118,10 +143,12 @@ private struct Reply {
     var encoding: String
     var fragment: Int
     var omitLength: Bool
+    var delayMilliseconds: Int64
     init(_ body: Data, mime: String = "application/x-protobuf", encoding: String = "identity",
-         fragment: Int = 16384, omitLength: Bool = false) {
+         fragment: Int = 16384, omitLength: Bool = false, delayMilliseconds: Int64 = 20) {
         self.body = body; self.mime = mime; self.encoding = encoding
         self.fragment = fragment; self.omitLength = omitLength
+        self.delayMilliseconds = delayMilliseconds
     }
 }
 
@@ -142,7 +169,7 @@ private final class FixtureHandler: ChannelInboundHandler {
             // Flush a tiny prefix separately: it cannot be mistaken for a complete UMP program.
             let split = min(response.fragment, response.body.count)
             if split > 0 { context.channel.writeAndFlush(HTTPServerResponsePart.body(.byteBuffer(context.channel.allocator.buffer(bytes: response.body.prefix(split)))), promise: nil) }
-            context.eventLoop.scheduleTask(in: .milliseconds(20)) {
+            context.eventLoop.scheduleTask(in: .milliseconds(response.delayMilliseconds)) {
                 for offset in stride(from: split, to: response.body.count, by: max(response.fragment, 4096)) {
                     let end = min(offset + max(response.fragment, 4096), response.body.count)
                     context.channel.write(HTTPServerResponsePart.body(.byteBuffer(context.channel.allocator.buffer(bytes: response.body[offset..<end]))), promise: nil)
@@ -160,13 +187,16 @@ private final class Lab {
     let upstream: Channel
     let proxy: ProxyServer
     let port: Int
+    let publicDER: Data
 
-    init(trustUpstream: Bool = true, reply: @escaping (HTTPRequestHead) -> Reply) throws {
+    init(trustUpstream: Bool = true, servesCertificate: Bool = false,
+         log: @escaping (String) -> Void = { _ in }, reply: @escaping (HTTPRequestHead) -> Reply) throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("localfilter-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true,
                                                attributes: [.posixPermissions: 0o700])
         let pair = try CertificateAuthority.generate()
         let authority = try CertificateAuthority(certificatePEM: pair.certificatePEM, privateKeyPEM: pair.privateKeyPEM)
+        publicDER = try authority.certificateDER()
         try Data(pair.certificatePEM.utf8).write(to: directory.appendingPathComponent("ca.pem"))
         // Each CONNECT hostname needs its own certificate on the synthetic upstream.
         // A media/API wildcard is unnecessary: the proxy checks API and media names separately below.
@@ -189,9 +219,10 @@ private final class Lab {
                 .flatMapThrowing { try channel.pipeline.syncOperations.addHandler(FixtureHandler(reply)) }
         }.bind(host: "127.0.0.1", port: 0).wait()
         var configuration = ProxyConfiguration(); configuration.port = 0
+        configuration.servesCertificate = servesCertificate
         configuration.testUpstream = upstream.localAddress
         if trustUpstream { configuration.testTrustRoots = .certificates(try NIOSSLCertificate.fromPEMBytes(Array(pair.certificatePEM.utf8))) }
-        proxy = try ProxyServer(configuration: configuration, authority: authority)
+        proxy = try ProxyServer(configuration: configuration, authority: authority, log: log)
         port = try proxy.start()
     }
 
@@ -200,11 +231,12 @@ private final class Lab {
         try? FileManager.default.removeItem(at: directory)
     }
 
-    func fetch(_ url: String, body: Data? = nil, headers: [String] = [], allowCurlFailure: Bool = false) throws -> (body: Data, headers: String, status: Int, exitCode: Int32) {
+    func fetch(_ url: String, body: Data? = nil, headers: [String] = [], allowCurlFailure: Bool = false,
+               maxTime: Double = 15, useProxy: Bool = true) throws -> (body: Data, headers: String, status: Int, exitCode: Int32) {
         let name = UUID().uuidString
         let output = directory.appendingPathComponent(name), header = directory.appendingPathComponent(name + ".headers")
         let task = Process(); task.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
-        var args = ["--silent", "--show-error", "--max-time", "15", "--http1.1", "--noproxy", "",
+        var args = ["--silent", "--show-error", "--max-time", String(maxTime), "--http1.1", "--noproxy", useProxy ? "" : "*",
                     "--proxy", "http://127.0.0.1:\(port)", "--cacert", directory.appendingPathComponent("ca.pem").path,
                     "--output", output.path, "--dump-header", header.path]
         for value in headers { args += ["--header", value] }

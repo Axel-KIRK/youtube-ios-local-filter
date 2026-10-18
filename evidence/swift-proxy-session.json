@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-18",
+  "commit": "8c88a7d971581addc7ae346ba1d229bb3eddf2c6",
+  "windowUTC": {
+    "start": "2026-10-18T16:09:52Z",
+    "end": "2026-10-18T16:12:00Z"
+  },
+  "device": {
+    "model": "iPhone SE (3rd generation)",
+    "os": "iOS 18.6.1",
+    "build": "22G90"
+  },
+  "application": "Official YouTube iOS app; app version not recorded",
+  "topology": "iPhone Wi-Fi proxy -> Mac Python CONNECT router -> Mac Swift HTTPS proxy and rewriting engine",
+  "configuration": {
+    "domainBlocking": false,
+    "videoIDBlocking": false,
+    "adProgramRewriting": true,
+    "authority": "Existing per-test authority, manually trusted on iPhone"
+  },
+  "observations": {
+    "completedResponses": 143,
+    "rewrittenResponses": 21,
+    "rewrittenProgramEvents": 21,
+    "successfulMediaResponses": 40,
+    "unclassifiedUpstreamFailures": 3,
+    "distinctVideos": null,
+    "adsPrevented": null,
+    "userReport": "Videos start without ads after reopening YouTube and selecting different videos.",
+    "screenshot": "One locally retained screenshot showed the official YouTube player without a visible ad label."
+  },
+  "limitations": [
+    "Single short session, not a controlled ad-impression experiment.",
+    "Prefetches and retries mean response counts are not video or prevented-ad counts.",
+    "Three upstream_failed events cannot be distinguished from navigation cancellations in this revision.",
+    "No autonomous on-device proxy, lock/resume, cellular, battery, or memory validation.",
+    "Raw traffic and personal screenshots remain private and are not included."
+  ]
+}

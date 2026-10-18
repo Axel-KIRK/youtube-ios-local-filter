@@ -1,24 +1,25 @@
 {
   "date": "2026-10-18",
-  "commit": "15c44674d9c6c7253a263ec7437d980f88002f3f",
-  "runURL": "https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39142406368",
+  "commit": "8c88a7d971581addc7ae346ba1d229bb3eddf2c6",
+  "runURL": "https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39143412431",
   "conclusion": "success",
   "jobs": [
     {
-      "name": "native",
-      "conclusion": "success",
-      "completedAt": "2026-10-18T15:53:59Z"
-    },
-    {
       "name": "reference",
       "conclusion": "success",
-      "completedAt": "2026-10-18T15:53:07Z"
+      "completedAt": "2026-10-18T16:06:20Z"
+    },
+    {
+      "name": "native",
+      "conclusion": "success",
+      "completedAt": "2026-10-18T16:08:48Z"
     }
   ],
-  "swiftTests": 16,
+  "swiftTests": 24,
   "pythonTests": 48,
   "iosSimulatorBuild": "passed, unsigned",
   "fixtureRegeneration": "byte-identical to committed fixtures",
-  "onDeviceAutonomousFiltering": "not implemented or tested",
-  "localCLI": "synthetic check passed with Command Line Tools; local XCTest unavailable without full Xcode"
+  "onDeviceAutonomousFiltering": "not implemented or tested; successful Mac Swift proxy phone trial recorded separately in swift-proxy-session.json",
+  "localCLI": "synthetic check passed; full Xcode 26.6 installed after this CI run",
+  "transportIntegrationTests": 7
 }

@@ -17,9 +17,16 @@ targets:
     platform: iOS
     sources:
       - App
+      - Shared
     dependencies:
       - package: LocalFilterCore
         product: LocalFilterCore
+      - target: LocalFilterTunnel
+        embed: true
+    entitlements:
+      path: App/LocalFilter.entitlements
+      properties:
+        com.apple.developer.networking.networkextension: [packet-tunnel-provider]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.axelkirk.localfilter
@@ -29,6 +36,35 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         TARGETED_DEVICE_FAMILY: '1,2'
         CODE_SIGN_STYLE: Automatic
+  LocalFilterTunnel:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Tunnel
+      - Shared
+    dependencies:
+      - package: LocalFilterCore
+        product: LocalFilterTransport
+    entitlements:
+      path: Tunnel/LocalFilterTunnel.entitlements
+      properties:
+        com.apple.developer.networking.networkextension: [packet-tunnel-provider]
+    info:
+      path: Tunnel/Info.plist
+      properties:
+        CFBundleDisplayName: LocalFilter Connection
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.networkextension.packet-tunnel
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PacketTunnelProvider
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.axelkirk.localfilter.Tunnel
+        APPLICATION_EXTENSION_API_ONLY: YES
+        TARGETED_DEVICE_FAMILY: '1,2'
+        CODE_SIGN_STYLE: Automatic
+        SKIP_INSTALL: YES
 schemes:
   LocalFilter:
     build:

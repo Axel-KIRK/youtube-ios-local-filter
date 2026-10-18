@@ -1,93 +1,141 @@
 import SwiftUI
+import NetworkExtension
 import LocalFilterCore
 
 struct ContentView: View {
-    @State private var checking = false
+    @StateObject private var connection = ConnectionController()
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("certificateTrustConfirmed") private var trustConfirmed = false
     @State private var diagnostic: DiagnosticResult?
+    @State private var checking = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Label("Filter inactive", systemImage: "pause.circle.fill")
-                            .font(.headline).foregroundStyle(.secondary)
+                        Label(statusTitle, systemImage: connection.running ? "network" : "pause.circle")
+                            .font(.headline)
                         Text("Your YouTube.\nFewer interruptions.")
                             .font(.largeTitle.bold()).fixedSize(horizontal: false, vertical: true)
-                        Text("We are preparing a simple setup, right on your iPhone.")
+                        Text("Experimental build. Setup and background filtering on iPhone still need device validation.")
                             .foregroundStyle(.secondary)
                     }
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("Preview version", systemImage: "info.circle")
-                            .font(.headline)
-                        Text("This version checks local processing. It does not filter YouTube traffic yet.")
-                        Text("No phone settings are changed.")
-                            .font(.footnote).foregroundStyle(.secondary)
-                    }
-                    .padding().frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 20))
-
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("The planned setup").font(.title2.bold())
-                        setupRow("1", title: "Allow the local connection",
-                                 detail: "An iOS confirmation will allow connections to reach the filter on this iPhone.")
-                        setupRow("2", title: "Trust the certificate",
-                                 detail: "A guide will walk you through installation and trust in Settings, once.")
-                        setupRow("3", title: "Enable and open YouTube",
-                                 detail: "Keep your usual YouTube app. No computer will be needed.")
+                    GroupBox {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("1. Allow the local connection").font(.headline)
+                            Text("iOS will ask to add a VPN configuration. Processing happens on this iPhone; there is no remote VPN server.")
+                                .font(.subheadline)
+                            Button("Prepare connection") { Task { await connection.start(.setup) } }
+                                .buttonStyle(.bordered).disabled(connection.busy || connection.running)
+                        }.frame(maxWidth: .infinity, alignment: .leading)
                     }
 
+                    GroupBox {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("2. Install and trust the certificate").font(.headline)
+                            Text("This allows LocalFilter to read and change YouTube responses. The private key stays on this iPhone.")
+                                .font(.subheadline)
+                            Button("Open certificate in Safari") {
+                                if let text = connection.snapshot?.certificateURL, let url = URL(string: text) { openURL(url) }
+                            }
+                            .buttonStyle(.bordered).disabled(connection.snapshot == nil || connection.busy)
+                            Text("Allow the download, then open Settings → General → VPN & Device Management and install LocalFilter Personal CA. Next, open General → About → Certificate Trust Settings and enable full trust for it.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                            Toggle("I enabled full trust in Settings", isOn: $trustConfirmed)
+                                .font(.subheadline)
+                            Text("This is your confirmation. The app has not independently verified trust.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
                     VStack(alignment: .leading, spacing: 12) {
-                        Button(action: runDiagnostic) {
+                        Text("3. Enable and open YouTube").font(.headline)
+                        Button {
+                            Task { await connection.start(.filter) }
+                        } label: {
                             HStack {
-                                if checking { ProgressView().tint(.white) }
-                                Text(checking ? "Checking…" : "Check this version")
+                                if connection.busy { ProgressView() }
+                                Text("Enable filtering")
                             }.frame(maxWidth: .infinity).padding(.vertical, 6)
                         }
-                        .buttonStyle(.borderedProminent).disabled(checking)
-                        .accessibilityHint("Checks test data without connecting to YouTube.")
-                        if let diagnostic {
-                            Label(diagnostic.passed ? "Local check passed" : "The check failed",
-                                  systemImage: diagnostic.passed ? "checkmark.circle.fill" : "exclamationmark.circle")
-                                .foregroundStyle(diagnostic.passed ? .green : .red)
-                            Text(diagnostic.passed
-                                 ? "Test instructions were removed and video data preserved. This does not enable filtering in YouTube."
-                                 : "The filter remains inactive. This result does not validate this version.")
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!trustConfirmed || connection.busy || connection.snapshot?.mode == .filter)
+                        if connection.running {
+                            Button("Stop local connection", role: .destructive) { connection.stop() }
+                                .buttonStyle(.bordered).disabled(connection.busy)
+                        }
+                        if let message = connection.message {
+                            Text(message).font(.footnote).foregroundStyle(.red)
+                        }
+                        if connection.connectionStatus == .connected, connection.snapshot == nil {
+                            Text("The connection is reported active, but the filter has not replied yet.")
                                 .font(.footnote).foregroundStyle(.secondary)
-                        } else {
-                            Text("This check only uses synthetic data on your device.")
+                        }
+                        if let status = connection.snapshot, status.mode == .filter {
+                            Text(status.responses == 0
+                                 ? "Open a different video in YouTube. We are waiting for traffic; the VPN indicator alone does not confirm filtering."
+                                 : "\(status.responses) responses received · \(status.rewrittenResponses) responses rewritten")
                                 .font(.footnote).foregroundStyle(.secondary)
+                            Text("Rewritten responses are not a count of ads prevented.")
+                                .font(.caption).foregroundStyle(.secondary)
+                            if status.upstreamFailures > 0 {
+                                Text("\(status.upstreamFailures) connection errors. Stop the local connection if playback stalls.")
+                                    .font(.footnote).foregroundStyle(.orange)
+                            }
                         }
                     }
 
-                    Link("What has been tested and what remains to be done",
+                    DisclosureGroup("Checks and removal") {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Button(checking ? "Checking…" : "Run local engine check") { runDiagnostic() }
+                                .disabled(checking)
+                            if let diagnostic {
+                                Text(diagnostic.passed ? "Synthetic check passed. This does not validate live filtering." : "The local check failed.")
+                                    .font(.footnote)
+                            }
+                            Button("Remove local connection", role: .destructive) {
+                                Task { await connection.removeConfiguration() }
+                            }.disabled(connection.running || connection.busy)
+                            Text("Stop the connection first. To remove the trusted certificate as well, delete LocalFilter Personal CA in Settings → General → VPN & Device Management.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }.padding(.top, 12)
+                    }
+                    Link("Test results and project status",
                          destination: URL(string: "https://github.com/Axel-KIRK/youtube-ios-local-filter")!)
                         .font(.footnote)
                 }
-                .padding(24).frame(maxWidth: 640)
-                .frame(maxWidth: .infinity)
+                .padding(24).frame(maxWidth: 640).frame(maxWidth: .infinity)
             }
             .navigationTitle("LocalFilter").navigationBarTitleDisplayMode(.inline)
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
+                while !Task.isCancelled {
+                    await connection.refresh()
+                    do { try await Task.sleep(nanoseconds: 2_000_000_000) } catch { break }
+                }
+            }
         }
     }
 
-    private func setupRow(_ number: String, title: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            Text(number).font(.headline).frame(width: 32, height: 32)
-                .background(.quaternary, in: Circle()).accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 5) {
-                Text(title).font(.headline)
-                Text(detail).font(.subheadline).foregroundStyle(.secondary)
-            }
+    private var statusTitle: String {
+        switch connection.connectionStatus {
+        case .connecting, .reasserting: return "Starting local connection…"
+        case .disconnecting: return "Stopping…"
+        case .connected:
+            guard let status = connection.snapshot else { return "Waiting for filter status" }
+            if status.mode == .setup { return "Ready for certificate setup" }
+            return status.responses > 0 ? "Receiving YouTube traffic" : "Waiting for YouTube traffic"
+        default: return "Filter inactive"
         }
     }
 
     private func runDiagnostic() {
         checking = true
         Task {
-            let result = await Task.detached(priority: .userInitiated) { LocalDiagnostic.run() }.value
-            diagnostic = result
+            diagnostic = await Task.detached(priority: .userInitiated) { LocalDiagnostic.run() }.value
             checking = false
         }
     }

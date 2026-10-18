@@ -11,6 +11,8 @@ public struct ProxyConfiguration {
     public var allowedClients: Set<String> = ["127.0.0.1", "::1"]
     public var enabled = true
     public var maximumConnections = 32
+    /// Optional public-CA download, available only to loopback peers.
+    public var servesCertificate = false
     public init() {}
     // Only injectable by this module's tests; unavailable through the executable or public API.
     var testUpstream: SocketAddress?
@@ -92,6 +94,7 @@ private final class ConnectHandler: ChannelInboundHandler, RemovableChannelHandl
     let client: String
     var host: String?
     var rejected = false
+    var certificateRequest = false
 
     init(server: ProxyServer, decoder: ByteToMessageHandler<HTTPRequestDecoder>,
          encoder: HTTPResponseEncoder, client: String) {
@@ -102,6 +105,14 @@ private final class ConnectHandler: ChannelInboundHandler, RemovableChannelHandl
         guard !rejected else { return }
         switch unwrapInboundIn(data) {
         case .head(let request):
+            if server.configuration.servesCertificate,
+               ["127.0.0.1", "::1"].contains(client), request.method == .GET,
+               request.uri == "/certificate.cer", host == nil,
+               !request.headers.contains(name: "transfer-encoding"),
+               request.headers.first(name: "content-length").map({ $0 == "0" }) ?? true {
+                certificateRequest = true
+                return
+            }
             guard request.method == .CONNECT, host == nil,
                   let target = DestinationPolicy.authority(request.uri),
                   !request.headers.contains(name: "transfer-encoding"),
@@ -114,6 +125,20 @@ private final class ConnectHandler: ChannelInboundHandler, RemovableChannelHandl
         case .body:
             rejected = true; sendError(context.channel, status: .badRequest)
         case .end:
+            if certificateRequest {
+                rejected = true
+                do {
+                    let certificate = try server.authority.certificateDER()
+                    let headers = HTTPHeaders([("Content-Type", "application/x-x509-ca-cert"),
+                        ("Content-Disposition", "attachment; filename=LocalFilter.cer"),
+                        ("Content-Length", String(certificate.count)), ("Cache-Control", "no-store"),
+                        ("Connection", "close")])
+                    context.channel.write(HTTPServerResponsePart.head(.init(version: .http1_1, status: .ok, headers: headers)), promise: nil)
+                    context.channel.write(HTTPServerResponsePart.body(.byteBuffer(context.channel.allocator.buffer(bytes: certificate))), promise: nil)
+                    context.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).whenComplete { _ in context.close(promise: nil) }
+                } catch { sendError(context.channel, status: .internalServerError) }
+                return
+            }
             guard let host else { context.close(promise: nil); return }
             do {
                 let ssl = NIOSSLServerHandler(context: try server.authority.serverContext(host: host))
@@ -155,6 +180,7 @@ private final class HTTPConnection: ChannelInboundHandler {
     var body = Data()
     var active = false
     var upstream: Channel?
+    var relay: ResponseRelay?
     var deadline: Scheduled<Void>?
 
     init(server: ProxyServer, host: String, client: String) {
@@ -203,9 +229,12 @@ private final class HTTPConnection: ChannelInboundHandler {
                                       receivedHeaders: { [weak self] in self?.deadline?.cancel(); self?.deadline = nil }) { [weak self] in
                 self?.deadline?.cancel(); self?.deadline = nil
                 self?.active = false; self?.request = nil; self?.upstream = nil
+                self?.relay = nil
             }
+            self.relay = relay
             deadline = channel.eventLoop.scheduleTask(in: .seconds(60)) {
-                relay.fail(); self.upstream?.close(promise: nil)
+                let expired = self.upstream
+                relay.fail(); expired?.close(promise: nil)
             }
             server.destination(host, on: channel.eventLoop).flatMap { address -> EventLoopFuture<Channel> in
                 guard channel.isActive else { return channel.eventLoop.makeFailedFuture(TransportError.upstreamClosed) }
@@ -244,7 +273,10 @@ private final class HTTPConnection: ChannelInboundHandler {
     }
 
     func channelInactive(context: ChannelHandlerContext) {
-        deadline?.cancel(); upstream?.close(promise: nil)
+        deadline?.cancel()
+        let abandoned = upstream
+        relay?.cancel()
+        abandoned?.close(promise: nil)
         context.fireChannelInactive()
     }
     func errorCaught(context: ChannelHandlerContext, error: Error) { context.close(promise: nil) }

@@ -21,7 +21,7 @@ The interface distinguishes setup, waiting for traffic, and received responses. 
 7. Return to LocalFilter, confirm that trust was enabled, and choose **Enable filtering**. That confirmation is a user attestation, not an independent trust check.
 8. Reopen the official YouTube app and choose several fresh videos. Confirm that the app receives traffic and reports rewriting. Compare actual playback with the displayed counts.
 
-The app and embedded extension compiled successfully for the iOS simulator in [CI](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39145003403). These steps are a test procedure, **not a report of a completed native installation**. At the time this increment was written, signing still awaited developer-program activation.
+The app and embedded extension compiled successfully for the iOS simulator in [CI](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39145003403). A [local unsigned arm64 iPhone build](../evidence/local-ios-build.json) also succeeded after installing the iOS platform in Xcode 26.6. These steps are a test procedure, **not a report of a completed native installation**. At the time this increment was written, signing still awaited developer-program activation.
 
 ## Required device checks
 

@@ -22,5 +22,6 @@
   "onDeviceAutonomousFiltering": "implemented experimentally, not provisioned or tested; Xcode currently shows only a Personal Team",
   "localCLI": "26 Swift tests passed with Xcode 26.6 on macOS 26.4",
   "transportIntegrationTests": 9,
-  "macProxyPhoneTrial": "successful separate playback trial on commit 8c88a7d; see swift-proxy-session.json"
+  "macProxyPhoneTrial": "successful separate playback trial on commit 8c88a7d; see swift-proxy-session.json",
+  "localUnsignedDeviceBuild": "passed with Xcode 26.6; see local-ios-build.json"
 }

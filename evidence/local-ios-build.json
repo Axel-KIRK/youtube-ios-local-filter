@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-18T16:40:23.176531+00:00",
+  "commit": "40b4c5ae8c8adc8e00ecbe3a8224e165c70f5632",
+  "xcode": "26.6 (17F113)",
+  "macOS": "26.4",
+  "sdk": "iPhoneOS 26.5",
+  "destination": "generic/platform=iOS",
+  "architecture": "arm64",
+  "codeSigningAllowed": false,
+  "result": "BUILD SUCCEEDED",
+  "app": "com.axelkirk.localfilter",
+  "extension": "com.axelkirk.localfilter.Tunnel",
+  "extensionPoint": "com.apple.networkextension.packet-tunnel",
+  "minimumOS": "17.0",
+  "deviceInstallation": "not attempted; paid membership remains pending",
+  "onDeviceRuntime": "not tested",
+  "publicArtifacts": "source and this summary only; no signing material or binary published"
+}

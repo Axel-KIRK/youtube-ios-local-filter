@@ -56,7 +56,9 @@ xcodebuild -project ios/LocalFilter.xcodeproj -scheme LocalFilter \
 
 CI runs the Swift tests, builds the simulator app, and separately checks the Python tests and fixture regeneration. The complete CI run passed **26 Swift tests (9 transport integration tests), 48 Python tests, byte-identical regenerated fixtures, and a successful unsigned simulator build of the app and its embedded Network Extension**. The transport tests include public certificate export and navigation cancellation. The tested revision and CI run are preserved in [native-validation.json](../evidence/native-validation.json).
 
-A simulator build does not demonstrate working network interception on an iPhone. Device installation and TestFlight require signing and the appropriate capabilities on the project's Apple account; no account or provisioning profile is included.
+The same app and extension also compiled locally for a generic arm64 iPhone with Xcode 26.6 and the iPhoneOS 26.5 SDK, with signing disabled. See [the local build record](../evidence/local-ios-build.json).
+
+Neither an unsigned device build nor a simulator build demonstrates working network interception on an iPhone. Device installation and TestFlight require signing and the appropriate capabilities on the project's Apple account; no account or provisioning profile is included.
 
 ## Next milestone
 

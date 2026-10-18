@@ -146,6 +146,12 @@ In the ten preserved final samples, rewriting takes approximately **1.8–2.3 ms
 
 Raw evidence remains in the local prototype directory: `events.jsonl`, `inspection/https-events.jsonl`, `ad-identification-proof.json`, `ump-prefetch-proof.json`, `video-filter-verification.json`, `ad-program-verification.json`, native captures, and `latest-tests.txt`. These are not included on GitHub: API responses may contain signed URLs or account information. TLS authority keys also remain private. The old files `LISEZMOI.txt` and `VERIFICATION.txt` are chronological archives; their earliest instructions no longer describe the final state.
 
+## Later Swift transport trial
+
+The Swift HTTPS proxy was tested through the same iPhone on October 18 from 16:09:52 to 16:12:00 UTC. Unlike the earlier combined configuration, domain and video-ID blocking were both disabled. The Swift engine rewrote 21 completed responses; 40 media responses completed with status 200. The user reported that videos started without ads. Three upstream failures were logged without enough detail to classify them; later code distinguishes client cancellations explicitly. This short follow-up does not resolve the earlier stall or establish a prevented-ad count.
+
+The exact tested code is preserved by tag [`swift-proxy-poc-2026-10-18`](https://github.com/Axel-KIRK/youtube-ios-local-filter/tree/swift-proxy-poc-2026-10-18), commit `8c88a7d971581addc7ae346ba1d229bb3eddf2c6`. See the [sanitized Swift session](../evidence/swift-proxy-session.json) and [transport procedure](SWIFT-PROXY.md). The Mac still supplied the proxy; the subsequent [native extension](NATIVE-PROTOTYPE.md) is a separate, unvalidated device path. After the temporary Swift trial, the original front proxy was restored so the existing dashboard continued to reflect the active reference proxy.
+
 ## Technical references
 
 - [YouTube-X player hooks](https://github.com/PoomSmart/YouTube-X/blob/main/Tweak.x): the advertising-field-removal approach; this tweak was not injected into our app.

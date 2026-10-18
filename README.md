@@ -32,7 +32,7 @@ The engine has been ported to `Sources/LocalFilterCore`: Protobuf, UMP streams, 
 
 `Sources/LocalFilterTransport` now connects that engine to a scoped HTTPS proxy, runnable on a Mac as `local-filter-proxy`. A real iPhone playback session succeeded through this backend, alongside synthetic TLS integration tests; an autonomous on-device test is still outstanding.
 
-October 18 validation: **24 Swift tests (including 7 transport integration tests) and 48 Python tests passed**, regenerated fixtures were identical, and the app compiled successfully for the iOS simulator. See the [preserved validation record](evidence/native-validation.json) for the tested revision and CI run. No standalone filtering test on an iPhone is claimed yet.
+October 18 validation: **26 Swift tests (including 9 transport integration tests) and 48 Python tests passed**, regenerated fixtures were identical, and the app and its embedded Network Extension compiled successfully for the iOS simulator. See the [preserved validation record](evidence/native-validation.json) for the tested revision and CI run. No standalone filtering test on an iPhone is claimed yet.
 
 ```sh
 swift test

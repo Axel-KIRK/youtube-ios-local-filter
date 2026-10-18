@@ -1,25 +1,26 @@
 {
   "date": "2026-10-18",
-  "commit": "8c88a7d971581addc7ae346ba1d229bb3eddf2c6",
-  "runURL": "https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39143412431",
+  "commit": "fa15c491ce00f572df9aa99d9184d6c26926a1c6",
+  "runURL": "https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39145003403",
   "conclusion": "success",
   "jobs": [
     {
       "name": "reference",
       "conclusion": "success",
-      "completedAt": "2026-10-18T16:06:20Z"
+      "completedAt": "2026-10-18T16:27:33Z"
     },
     {
       "name": "native",
       "conclusion": "success",
-      "completedAt": "2026-10-18T16:08:48Z"
+      "completedAt": "2026-10-18T16:31:56Z"
     }
   ],
-  "swiftTests": 24,
+  "swiftTests": 26,
   "pythonTests": 48,
-  "iosSimulatorBuild": "passed, unsigned",
+  "iosSimulatorBuild": "passed, unsigned app and embedded Network Extension; embedded-binary validation passed",
   "fixtureRegeneration": "byte-identical to committed fixtures",
-  "onDeviceAutonomousFiltering": "not implemented or tested; successful Mac Swift proxy phone trial recorded separately in swift-proxy-session.json",
-  "localCLI": "synthetic check passed; full Xcode 26.6 installed after this CI run",
-  "transportIntegrationTests": 7
+  "onDeviceAutonomousFiltering": "implemented experimentally, not provisioned or tested; Xcode currently shows only a Personal Team",
+  "localCLI": "26 Swift tests passed with Xcode 26.6 on macOS 26.4",
+  "transportIntegrationTests": 9,
+  "macProxyPhoneTrial": "successful separate playback trial on commit 8c88a7d; see swift-proxy-session.json"
 }

@@ -53,7 +53,7 @@ class Inspector:
             handle.write(json.dumps(row, ensure_ascii=False) + '\n')
 
     def client_info(self, client):
-        # La connexion survit au rechargement du script par mitmproxy.
+        # The connection survives mitmproxy script reloads.
         return getattr(client, '_youtube_poc', self.clients.get(client.id, {}))
 
     def note_navigation(self, flow, path, navigation):
@@ -86,7 +86,7 @@ class Inspector:
         try:
             addresses = await asyncio.get_running_loop().getaddrinfo(host, port, type=socket.SOCK_STREAM)
             if not addresses or any(not ipaddress.ip_address(a[4][0]).is_global for a in addresses):
-                data.server.error = 'Destination non publique'
+                data.server.error = 'Non-public destination'
         except OSError:
             data.server.error = 'DNS failure'
 
@@ -112,7 +112,7 @@ class Inspector:
         client_ip = flow.metadata['poc'].get('client_ip', '')
         if flow.request.host in INSPECT_HOSTS:
             if request_path == '/youtubei/v1/log_event' and not vault.ready(client_ip):
-                # Demander la configuration courante au lieu de sa validation en cache.
+                # Request the current configuration instead of validating the cached copy.
                 flow.request.headers.pop('x-youtube-hot-hash-data', None)
             navigation = inspect_navigation(flow.request.get_content(strict=False) or b'', request_path)
             if navigation:

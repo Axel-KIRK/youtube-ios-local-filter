@@ -65,7 +65,7 @@ class UmpGate:
             self.bytes_dropped += len(self.prefix)
             self.prefix.clear()
             self.events.append({'partType': self.kind, 'decision': 'blocked_unknown',
-                                'reason': 'Type de bloc UMP non reconnu'})
+                                'reason': 'Unrecognized UMP block type'})
 
     def _finish_part(self, output):
         if self.mode == 'header':

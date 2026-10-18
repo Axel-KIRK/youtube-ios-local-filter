@@ -35,7 +35,7 @@
     {
       "path": "reference/proxy/inspection/https_addon.py",
       "originalSHA256": "14f9a4fefe3eb9f06df145989ebb5c639da4b24e932725b51ca54e99fffaa41c",
-      "publishedSHA256": "9de0e97a3372f9cc535b8a6ca8767497264442220cd00ad249ff94bcb06865bf",
+      "publishedSHA256": "eaaea48d5632e096e4a2445ee6f1fa23e69d9e7c359860d286ba1451cbb82ded",
       "changedForPublication": true
     },
     {
@@ -71,7 +71,7 @@
     {
       "path": "reference/proxy/inspection/ump_filter.py",
       "originalSHA256": "97f177ec4ee2d1eabc36536f3e5725a3faa9e68ffc8abd640b779e8d17e5e2fb",
-      "publishedSHA256": "d18db9522636e619934e8aa4f19c0360493be90d760eb11a494c6bb61f651ceb",
+      "publishedSHA256": "33ab0f1c7b7715e25df854d02c38f4726a81b78f50cf2752500fb57bea0292c9",
       "changedForPublication": true
     },
     {

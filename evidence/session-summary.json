@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-18",
+  "device": {
+    "model": "iPhone SE (3rd generation)",
+    "productType": "iPhone14,6",
+    "ios": "18.6.1",
+    "build": "22G90",
+    "youtubeVersion": "not recorded"
+  },
+  "windowUTC": {
+    "from": "2026-10-18T15:07:35+00:00",
+    "through": "2026-10-18T15:13:24.847231+00:00"
+  },
+  "modifiedResponses": 43,
+  "distinctVideoIds": 41,
+  "removedFields": {
+    "playerAds": 93,
+    "adSlots": 42
+  },
+  "observedEnvelopeTypes": [
+    25
+  ],
+  "userReportedAds": 0,
+  "reportedVideoChanges": "manual",
+  "mainPlaybackObservedSeconds": 40,
+  "automaticTestsPassed": 48,
+  "config": {
+    "domainMode": "block",
+    "httpsMode": "observe-media",
+    "adProgramMode": "remove",
+    "videoFilterEnabled": false
+  },
+  "timingSamples": [
+    {
+      "time": "2026-10-18T15:12:33.959345+00:00",
+      "processingMs": 1.922,
+      "bufferingMs": 18.423,
+      "sinceRequestMs": 1314.4,
+      "upstreamHeadersMs": 47.8
+    },
+    {
+      "time": "2026-10-18T15:12:42.055072+00:00",
+      "processingMs": 2.186,
+      "bufferingMs": 17.85,
+      "sinceRequestMs": 1264.7,
+      "upstreamHeadersMs": 71.0
+    },
+    {
+      "time": "2026-10-18T15:12:44.923129+00:00",
+      "processingMs": 2.042,
+      "bufferingMs": 13.437,
+      "sinceRequestMs": 482.9,
+      "upstreamHeadersMs": 45.1
+    },
+    {
+      "time": "2026-10-18T15:12:49.136049+00:00",
+      "processingMs": 2.146,
+      "bufferingMs": 19.106,
+      "sinceRequestMs": 456.7,
+      "upstreamHeadersMs": 46.5
+    },
+    {
+      "time": "2026-10-18T15:12:55.824310+00:00",
+      "processingMs": 2.104,
+      "bufferingMs": 4.341,
+      "sinceRequestMs": 422.6,
+      "upstreamHeadersMs": 48.7
+    },
+    {
+      "time": "2026-10-18T15:13:00.360050+00:00",
+      "processingMs": 2.257,
+      "bufferingMs": 22.719,
+      "sinceRequestMs": 527.3,
+      "upstreamHeadersMs": 45.5
+    },
+    {
+      "time": "2026-10-18T15:13:01.782069+00:00",
+      "processingMs": 1.847,
+      "bufferingMs": 15.269,
+      "sinceRequestMs": 505.4,
+      "upstreamHeadersMs": 57.3
+    },
+    {
+      "time": "2026-10-18T15:13:04.372895+00:00",
+      "processingMs": 1.838,
+      "bufferingMs": 16.916,
+      "sinceRequestMs": 660.9,
+      "upstreamHeadersMs": 56.6
+    },
+    {
+      "time": "2026-10-18T15:13:05.932772+00:00",
+      "processingMs": 1.985,
+      "bufferingMs": 24.303,
+      "sinceRequestMs": 572.7,
+      "upstreamHeadersMs": 45.5
+    },
+    {
+      "time": "2026-10-18T15:13:09.034619+00:00",
+      "processingMs": 2.029,
+      "bufferingMs": 49.997,
+      "sinceRequestMs": 481.8,
+      "upstreamHeadersMs": 58.7
+    }
+  ],
+  "limits": [
+    "Not a count of ads prevented",
+    "Not an A/B controlled efficacy measurement",
+    "One device and one session",
+    "Latest ambiguous user report of being blocked on ads remains unresolved",
+    "Raw logs, signed URLs, device identifiers and certificate keys are not published"
+  ]
+}

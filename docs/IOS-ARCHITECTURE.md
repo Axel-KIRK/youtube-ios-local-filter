@@ -43,4 +43,4 @@ La confiance d'un certificat installé manuellement demande une action dans Rég
 
 ## Ordre d'implémentation
 
-Le premier incrément porte le moteur réel en Swift et crée une app de vérification locale. Il ne doit pas afficher « protection activée » sans connexion réelle au trafic de YouTube. L'intégration réseau et la distribution constituent le jalon suivant ; une coquille VPN qui accepte la connexion puis ne transmet aucun paquet serait un défaut, pas un progrès.
+Le premier incrément a porté le moteur réel en Swift et créé une app de vérification locale, compilée pour le simulateur iOS. Elle affiche « Filtre inactif » tant qu'elle n'a pas accès au trafic de YouTube. L'intégration réseau et la distribution constituent le jalon suivant ; une coquille VPN qui accepte la connexion puis ne transmet aucun paquet serait un défaut, pas un progrès. Voir [l'état d'implémentation et les vérifications](DEVELOPMENT.md).

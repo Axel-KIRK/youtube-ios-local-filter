@@ -12,7 +12,7 @@ python3.13 -m venv .venv-https
 cd reference/proxy
 ```
 
-Ce verrouillage capture l'environnement de la session ; une réinstallation complète sur un Mac vierge n'a pas encore été validée. Ne pas mélanger cet environnement avec pymobiledevice3, dont les dépendances cryptographiques diffèrent. `reference/requirements-inspection.lock.txt` conserve les versions de diagnostic USB, qui ne sont pas nécessaires pour filtrer.
+Ce verrouillage capture l'environnement de la session. Son installation et les 48 tests ont aussi réussi dans un environnement GitHub Actions macOS 15 neuf ; la configuration complète d'un deuxième couple Mac/iPhone reste à refaire. Ne pas mélanger cet environnement avec pymobiledevice3, dont les dépendances cryptographiques diffèrent. `reference/requirements-inspection.lock.txt` conserve les versions de diagnostic USB, qui ne sont pas nécessaires pour filtrer.
 
 Relever l'adresse Wi-Fi actuelle du Mac et celle de l'iPhone. Les deux doivent communiquer sur le réseau local. Les IP de la session étaient temporaires et ne doivent pas être réutilisées aveuglément. Sur le Mac, `lsof -nP -iTCP:8877 -iTCP:8878 -iTCP:8880 -sTCP:LISTEN` permet de repérer des services déjà démarrés ; ne pas lancer une seconde instance sur les mêmes ports.
 
@@ -138,4 +138,3 @@ Pour arrêter seulement la réécriture, décocher le panneau de programmation (
 Pour terminer complètement : **restaurer d'abord le proxy Wi-Fi antérieur sur l'iPhone**, puis arrêter les trois services avec Ctrl-C. Le profil de certificat de ce test peut ensuite être retiré dans VPN et gestion de l'appareil. Ne retirer aucun autre profil. Le mode développeur utilisé pour les captures peut être désactivé séparément ; il ne fait pas partie du parcours nécessaire au filtre.
 
 Le dossier `inspection/https-ca` doit être conservé de façon privée si l'on veut retrouver la même confiance sans réinstaller le certificat. S'il est perdu, générer une nouvelle autorité et refaire l'installation sur le téléphone. Git conserve le code et les mesures publiables, pas cette clé.
-

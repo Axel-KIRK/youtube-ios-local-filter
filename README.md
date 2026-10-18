@@ -25,6 +25,8 @@ Le dépôt ne contient ni certificat privé, ni cookies, ni requêtes authentifi
 
 Le moteur est porté dans `Sources/LocalFilterCore` : Protobuf, flux UMP, enveloppes Onesie 0/25, authentification, réécriture et conservation des médias. `ios/App` contient une première interface SwiftUI qui vérifie ce traitement avec des données fictives. Le raccordement au trafic réel de YouTube et le parcours d'installation du certificat restent à implémenter. L'interface indique donc **filtre inactif**.
 
+Validation du 18 octobre : **16 tests Swift et 48 tests Python passent**, fixtures identiques après régénération, compilation de l'app pour le simulateur iOS réussie. [Exécution GitHub Actions](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39141149318), [résultat conservé](evidence/native-validation.json). Aucun essai de filtrage autonome sur iPhone n'est encore revendiqué.
+
 ```sh
 swift test
 ```

@@ -54,7 +54,9 @@ xcodebuild -project ios/LocalFilter.xcodeproj -scheme LocalFilter \
   -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
-La CI exécute les tests Swift, compile cette app pour le simulateur, puis vérifie séparément les tests Python et la régénération des fixtures. Une compilation simulateur ne prouve pas un fonctionnement réseau sur iPhone. L'installation sur appareil et TestFlight nécessitent la signature et les capacités du compte Apple du projet ; aucun compte ni profil n'est embarqué.
+La CI exécute les tests Swift, compile cette app pour le simulateur, puis vérifie séparément les tests Python et la régénération des fixtures. Le [premier passage complet](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39141149318), sur le commit `798ebfc945ee75a517296383c78b4cc31a8093da`, a réussi : **16 tests Swift, 48 tests Python, fixtures régénérées à l'identique, compilation simulateur réussie**. Le résultat durable est dans [native-validation.json](../evidence/native-validation.json).
+
+Une compilation simulateur ne prouve pas un fonctionnement réseau sur iPhone. L'installation sur appareil et TestFlight nécessitent la signature et les capacités du compte Apple du projet ; aucun compte ni profil n'est embarqué.
 
 ## Prochain jalon
 

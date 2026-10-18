@@ -1,6 +1,6 @@
 import Foundation
 
-/// Adapter boundary for a future HTTPS transport. Does not open sockets or configure a VPN.
+/// Adapter used by the HTTPS transport. Does not open sockets or configure a VPN itself.
 public final class ResponseProcessor {
     public let vault = OnesieKeyVault()
     public var enabled: Bool
@@ -16,6 +16,12 @@ public final class ResponseProcessor {
 
     public func needsFreshConfiguration(host: String, path: String, client: String) -> Bool {
         Self.isAPIHost(host) && path == "/youtubei/v1/log_event" && !vault.ready(client: client)
+    }
+
+    public func prepareRequest(host: String, path: String, body: Data, client: String) {
+        if Self.isMediaHost(host), path == "/initplayback" {
+            vault.invalidateIfUnknownRequest(body, client: client)
+        }
     }
 
     public func processAPI(_ body: Data, host: String, path: String, client: String) -> RewriteResult {

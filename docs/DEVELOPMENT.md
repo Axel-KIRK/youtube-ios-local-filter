@@ -2,7 +2,7 @@
 
 ## Implemented components
 
-`LocalFilterCore` is a Swift package with no downloaded dependencies. It uses CryptoKit, CommonCrypto, and zlib provided by Apple platforms. It ports the prototype's processing:
+`LocalFilterCore` uses CryptoKit, CommonCrypto, and zlib provided by Apple platforms. The package's new transport additionally downloads pinned Apple SwiftNIO, NIOSSL, and Swift Certificates dependencies. The core ports the prototype's processing:
 
 - Bounded Protobuf parsing, preservation of unknown bytes, and removal of fields 7/45/68 from a recognized PlayerResponse.
 - `/player` and `/get_watch` API responses.
@@ -11,13 +11,13 @@
 - An in-memory hotconfig key cache with client isolation, expiration, and a 32-entry limit.
 - An HTTP integration boundary with exact host and path checks.
 
-`ResponseProcessor` **does not open connections**. A future transport must supply responses already decrypted by the MITM, apply the necessary header changes, remove `x-youtube-hot-hash-data` when `needsFreshConfiguration` requests it, and handle cancellation and backpressure. An empty intermediate stream output must never be converted into the end of an HTTP response.
+`ResponseProcessor` **does not open connections itself**. `LocalFilterTransport` now supplies decrypted responses, adjusts HTTP framing and stale validation headers, and connects its incremental output to the downstream connection. The new [Swift proxy and its test procedure](SWIFT-PROXY.md) are separate from the preserved Python implementation. An empty intermediate stream output must never be converted into the end of an HTTP response.
 
 Each stream and its cache must be used on the same serial executor. Diagnostics are limited to 64 unconsumed events per response; the consumer retrieves them with `drainEvents()`. Keys are not written to disk. Memory usage in the future networking process still needs measurement on a device.
 
 ## Swift tests
 
-On a Mac with full Xcode and Swift 6 installed (XCTest is not included in every Command Line Tools-only installation):
+On a Mac with full Xcode and a compatible Swift toolchain (the pinned dependencies require at least Swift 6.1; this transport was compiled locally with Swift 6.3.3):
 
 ```sh
 swift test
@@ -60,4 +60,4 @@ A simulator build does not demonstrate working network interception on an iPhone
 
 ## Next milestone
 
-Implement and measure the local HTTPS proxy while YouTube is in the foreground, connect the engine, and create a private certificate authority for each installation. Then reproduce ad-free startup **with the Mac disconnected** and simplify the installation guide. Distribution requirements are distinguished from technical feasibility in the [architecture document](IOS-ARCHITECTURE.md).
+Validate the Swift HTTPS proxy against the real iPhone session, integrate it into a signed network extension, and add per-installation Keychain storage and certificate setup. Then reproduce ad-free startup **with the Mac disconnected** and simplify the installation guide. Distribution requirements are distinguished from technical feasibility in the [architecture document](IOS-ARCHITECTURE.md).

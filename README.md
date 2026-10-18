@@ -16,6 +16,7 @@ This result covers one session with a local certificate explicitly trusted on th
 - [Reproduce the prototype and undo the setup](docs/REPRODUCE.md)
 - [iOS architecture, user setup, and remaining work](docs/IOS-ARCHITECTURE.md)
 - [Swift engine, verification app, and build instructions](docs/DEVELOPMENT.md)
+- [Swift HTTPS proxy and transport checks](docs/SWIFT-PROXY.md)
 - [Publishable session measurements](evidence/session-summary.json)
 - [Python source of the tested prototype](reference/proxy/)
 
@@ -24,6 +25,8 @@ This repository contains no private certificate keys, cookies, authenticated req
 ## Initial iOS implementation
 
 The engine has been ported to `Sources/LocalFilterCore`: Protobuf, UMP streams, Onesie 0/25 envelopes, authentication, rewriting, and media preservation. `ios/App` contains an initial SwiftUI interface that checks this processing with synthetic data. Connecting it to live YouTube traffic and implementing certificate setup remain outstanding. The interface therefore shows **Filter inactive**.
+
+`Sources/LocalFilterTransport` now connects that engine to a scoped HTTPS proxy, runnable on a Mac as `local-filter-proxy`. A verified TLS round trip to Google's API succeeds. New synthetic transport integration tests are included; an autonomous on-device test is still outstanding.
 
 October 18 validation: **16 Swift tests and 48 Python tests passed**, regenerated fixtures were identical, and the app compiled successfully for the iOS simulator. See the [preserved validation record](evidence/native-validation.json) for the tested revision and CI run. No standalone filtering test on an iPhone is claimed yet.
 

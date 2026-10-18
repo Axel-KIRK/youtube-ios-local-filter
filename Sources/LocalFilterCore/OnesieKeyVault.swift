@@ -12,6 +12,15 @@ public final class OnesieKeyVault {
     public var entryCount: Int { entries.count }
     public func clear() { entries.removeAll() }
 
+    /// A new wrapped key can appear after YouTube restarts while its hot-config hash is unchanged.
+    public func invalidateIfUnknownRequest(_ body: Data, client: String, now: Date = Date()) {
+        guard body.count <= 1024 * 1024,
+              let envelope = try? Wire.child(body, 3),
+              let wrapped = try? Wire.child(envelope, 5), (16...1024).contains(wrapped.count),
+              keyForRequest(body, client: client, now: now) == nil else { return }
+        entries = entries.filter { $0.key.client != client }
+    }
+
     public func ready(client: String, now: Date = Date()) -> Bool {
         entries = entries.filter { $0.value.expires > now }
         return entries.contains { $0.key.client == client }

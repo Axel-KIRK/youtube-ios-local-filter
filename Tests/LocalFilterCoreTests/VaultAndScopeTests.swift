@@ -49,4 +49,15 @@ final class VaultAndScopeTests: XCTestCase {
         XCTAssertNil(processor.makeStream(host: "rr1.googlevideo.com", path: "/initplayback", contentType: "application/vnd.yt-ump", contentEncoding: "gzip", requestBody: Data(), client: "a"))
         XCTAssertNotNil(processor.makeStream(host: "rr1.googlevideo.com", path: "/initplayback", contentType: "application/vnd.yt-ump; x=1", requestBody: Data(), client: "a"))
     }
+
+    func testUnknownWrappedKeyInvalidatesOnlyItsClientsConfiguration() {
+        let vault = OnesieKeyVault(), wrapped = Data(repeating: 9, count: 32)
+        XCTAssertTrue(vault.capture(config(wrapped), client: "a"))
+        XCTAssertTrue(vault.capture(config(wrapped), client: "b"))
+        vault.invalidateIfUnknownRequest(request(wrapped), client: "a")
+        XCTAssertTrue(vault.ready(client: "a"))
+        vault.invalidateIfUnknownRequest(request(Data(repeating: 8, count: 32)), client: "a")
+        XCTAssertFalse(vault.ready(client: "a"))
+        XCTAssertTrue(vault.ready(client: "b"))
+    }
 }

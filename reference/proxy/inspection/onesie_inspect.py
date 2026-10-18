@@ -1,8 +1,7 @@
-"""Lecture locale de l'enveloppe de démarrage ; clés uniquement en mémoire.
+"""Local startup-envelope inspection; keys remain in memory only.
 
-AES-CTR + HMAC-SHA256 selon le protocole public Onesie. Ni requête déchiffrée,
-ni clés, ni en-têtes d'authentification ne sont journalisés ou transmis ailleurs.
-"""
+AES-CTR + HMAC-SHA256 follow the public Onesie protocol. Decrypted requests,
+keys, and authentication headers are never logged or forwarded elsewhere."""
 import base64
 import hashlib
 import hmac
@@ -97,5 +96,5 @@ class KeyVault:
             return {'eligible': False, 'onesieStatus': 'unrecognized'}
 
 
-# Le module persiste lors du rechargement de l'addon ; aucune clé écrite sur disque.
+# The module survives addon reloads; no key is written to disk.
 vault = KeyVault()

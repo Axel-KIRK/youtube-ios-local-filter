@@ -1,10 +1,10 @@
-# Reproduire le prototype testé
+# Reproducing the tested prototype
 
-Cette procédure reproduit le **prototype Mac + iPhone**, pas encore l'objectif d'app autonome. Elle utilise la copie publique des sources ; les environnements, journaux et certificats de la session ne sont pas distribués.
+This procedure reproduces the **Mac + iPhone prototype**, not the standalone-app goal. It uses the public source copy; session environments, logs, and certificates are not distributed.
 
-## Préparer le Mac
+## Prepare the Mac
 
-Utiliser Python 3.13 pour le relais HTTPS. Les dépendances exactes observées sur macOS arm64 sont dans `reference/requirements-https.lock.txt`. Le proxy et le tableau de bord utilisent la bibliothèque standard. Depuis la racine du dépôt :
+Use Python 3.13 for the HTTPS relay. The exact dependencies observed on macOS arm64 are in `reference/requirements-https.lock.txt`. The proxy and dashboard use the standard library. From the repository root:
 
 ```sh
 python3.13 -m venv .venv-https
@@ -12,15 +12,15 @@ python3.13 -m venv .venv-https
 cd reference/proxy
 ```
 
-Ce verrouillage capture l'environnement de la session. Son installation et les 48 tests ont aussi réussi dans un environnement GitHub Actions macOS 15 neuf ; la configuration complète d'un deuxième couple Mac/iPhone reste à refaire. Ne pas mélanger cet environnement avec pymobiledevice3, dont les dépendances cryptographiques diffèrent. `reference/requirements-inspection.lock.txt` conserve les versions de diagnostic USB, qui ne sont pas nécessaires pour filtrer.
+This lockfile captures the session environment. Installation and all 48 tests also passed in a fresh GitHub Actions macOS 15 environment; a complete setup on a second Mac/iPhone pair still needs validation. Do not combine this environment with pymobiledevice3, whose cryptographic dependencies differ. `reference/requirements-inspection.lock.txt` preserves the USB diagnostic versions, which are not needed for filtering.
 
-Relever l'adresse Wi-Fi actuelle du Mac et celle de l'iPhone. Les deux doivent communiquer sur le réseau local. Les IP de la session étaient temporaires et ne doivent pas être réutilisées aveuglément. Sur le Mac, `lsof -nP -iTCP:8877 -iTCP:8878 -iTCP:8880 -sTCP:LISTEN` permet de repérer des services déjà démarrés ; ne pas lancer une seconde instance sur les mêmes ports.
+Find the current Wi-Fi addresses of the Mac and iPhone. They must be able to communicate on the local network. Session IP addresses were temporary and should not be reused blindly. On the Mac, `lsof -nP -iTCP:8877 -iTCP:8878 -iTCP:8880 -sTCP:LISTEN` identifies services already running; do not start another instance on the same ports.
 
-## Démarrer les trois services
+## Start the three services
 
-Dans trois terminaux, chacun placé dans `reference/proxy` :
+Use three terminals, each in `reference/proxy`:
 
-**1. Relais HTTPS** — rester en fonctionnement ; au premier démarrage mitmproxy crée une autorité locale dans le dossier privé indiqué.
+**1. HTTPS relay** — leave it running; on first startup, mitmproxy creates a local certificate authority in the specified private directory.
 
 ```sh
 umask 077
@@ -34,7 +34,7 @@ mkdir -p inspection/https-ca
   -s inspection/https_addon.py
 ```
 
-**2. Proxy d'entrée** — remplacer les deux valeurs d'exemple par les IP réelles :
+**2. Entry proxy** — replace both example values with the actual addresses:
 
 ```sh
 POC_MAC_IP='192.0.2.10'
@@ -43,29 +43,29 @@ python3 -u proxy.py --listen "$POC_MAC_IP" \
   --allow-client "$POC_PHONE_IP" --allow-client "$POC_MAC_IP"
 ```
 
-Ces adresses `192.0.2.*` sont des exemples de documentation. Le proxy n'accepte que les clients autorisés et localhost. Il refuse les destinations privées et les ports autres que 443. Le relais HTTPS reste sur localhost.
+These `192.0.2.*` addresses are documentation examples. The proxy only accepts authorized clients and localhost. It rejects private destinations and ports other than 443. The HTTPS relay listens only on localhost.
 
-**3. Tableau de bord** — remplacer à nouveau l'IP d'exemple :
+**3. Dashboard** — replace the example IP again:
 
 ```sh
 POC_PHONE_IP='192.0.2.20' python3 -u dashboard/server.py
 ```
 
-Ouvrir `http://127.0.0.1:8878` sur le Mac. Le réglage `POC_PHONE_IP` sert à l'affichage de l'état automatique historique ; le contrôle d'accès réseau dépend bien des arguments du proxy.
+Open `http://127.0.0.1:8878` on the Mac. `POC_PHONE_IP` selects the historical automatic-filter state shown by the dashboard; actual network access control uses the proxy's command-line arguments.
 
-## Installer le certificat et configurer l'iPhone
+## Install the certificate and configure the iPhone
 
-Les fichiers distribués démarrent en observation, sans déchiffrement. Sur l'iPhone, noter le réglage de proxy Wi-Fi précédent, puis choisir Réglages → Wi-Fi → ⓘ → Configurer le proxy → Manuel. Renseigner IP du Mac, port **8877**, authentification désactivée.
+The distributed settings start in observation mode without decryption. On the iPhone, record the previous Wi-Fi proxy setting, then choose Settings → Wi-Fi → ⓘ → Configure Proxy → Manual. Enter the Mac's IP, port **8877**, and disable authentication.
 
-1. Ouvrir `http://poc.test` dans Safari ; vérifier « Connexion au proxy : OK ».
-2. Ouvrir `http://poc.test/youtube-poc.cer`, autoriser le téléchargement, puis installer le profil dans Réglages → Général → VPN et gestion de l'appareil, ou « Profil téléchargé ».
-3. Dans Réglages → Général → Informations → Réglages des certificats, activer la **confiance totale** pour cette autorité uniquement. Installer le profil sans cette étape a causé l'échec TLS initial de notre essai.
+1. Open `http://poc.test` in Safari and check for “Proxy connection: OK”.
+2. Open `http://poc.test/youtube-poc.cer`, allow the download, then install the profile in Settings → General → VPN & Device Management, or “Profile Downloaded”.
+3. In Settings → General → About → Certificate Trust Settings, enable **full trust** for this authority only. Installing the profile without this step caused the initial TLS failure in our experiment.
 
-Le nom de l'autorité générée par mitmproxy peut différer du nom personnalisé utilisé pendant la session. Vérifier le certificat local avant de lui faire confiance ; sa clé privée ne doit jamais quitter le Mac ou être commise dans Git. Safari sert uniquement à l'installation et au diagnostic ; la lecture testée reste dans YouTube. [Instructions Apple](https://support.apple.com/en-us/102390)
+The authority name generated by mitmproxy may differ from the custom session name. Verify the local certificate before trusting it; its private key must never leave the Mac or be committed to Git. Safari is only used for installation and diagnostics; playback is tested in YouTube. [Apple instructions](https://support.apple.com/en-us/102390)
 
-## Retrouver la configuration finale
+## Restore the final configuration
 
-Après l'installation et la confiance, depuis `reference/proxy` :
+After installation and trust, from `reference/proxy`:
 
 ```sh
 python3 - <<'PY'
@@ -81,17 +81,17 @@ Path('inspection/video-filter.json').write_text(json.dumps({
 PY
 ```
 
-L'ID indiqué est un exemple inactif : **aucune cible n'est nécessaire** au retrait de programmation. Ne pas activer simultanément l'ancien filtre « Vidéo autorisée ». Le tableau empêche cette combinaison lorsqu'on passe par ses boutons.
+The ID is an inactive example: **no target ID is needed** for ad-program removal. Do not also enable the old “Allowed video” filter. The dashboard prevents that combination when using its controls.
 
-Un changement du mode HTTPS ou de la configuration du filtre média ferme les tunnels existants. Un changement de programmation agit sur les nouvelles réponses. Fermer complètement YouTube, rouvrir et choisir une vidéo pour éviter de tirer une conclusion d'une ancienne réponse en cache.
+Changing HTTPS mode or media-filter configuration closes existing tunnels. Changing ad-program mode affects new responses. Fully close YouTube, reopen it, and select a video to avoid drawing conclusions from an old cached response.
 
-Les clés Onesie sont en mémoire seulement. Après redémarrage du relais, elles doivent être récupérées dans une nouvelle réponse de configuration. Un premier chargement sans clé peut être transmis intact et contenir une pub. Le code tente de récupérer une configuration fraîche via `/log_event` ; ce mécanisme ne promet pas que le premier chargement de toute session sera filtré.
+Onesie keys exist only in memory. After restarting the relay, they must be recovered from a new configuration response. An initial request without a key may pass through unchanged and contain an ad. The code attempts to fetch fresh configuration through `/log_event`; this does not guarantee that the first request of every session is filtered.
 
-## Contrôler le résultat
+## Check the result
 
-Dans le panneau « Programmation publicitaire », l'état doit être `remove` et le filtre par identifiant désactivé. Les événements `ad_program` doivent afficher `status: decoded`, `modified: true`, l'ID et les champs retirés. `modified` sur une réponse ne signifie pas que des octets vidéo ont été bloqués.
+In the “Ad programming” panel, the mode should be `remove` and the video-ID filter should be disabled. `ad_program` events should show `status: decoded`, `modified: true`, the ID, and the removed fields. `modified` on a response does not mean that video bytes were blocked.
 
-Pour résumer les derniers événements sans imprimer de corps API :
+To summarize recent events without printing API bodies:
 
 ```sh
 python3 - <<'PY'
@@ -104,11 +104,11 @@ for e in [r for r in rows if r.get('event') == 'ad_program'][-10:]:
 PY
 ```
 
-Noter, pour chaque sélection, l'heure, le titre localement, une éventuelle pub, un éventuel blocage et le début réel de la vidéo. Alterner au tableau les modes « retirer » et « observer » sur plusieurs lectures. Le changement de mode n'efface pas les caches. Pour isoler le retrait de programmation, refaire aussi l'essai avec `mode.txt` en `observe` ; cela n'a pas été mesuré de façon contrôlée lors de la session initiale.
+For each selection, record the time, title locally, any ad, any stall, and when the main video actually starts. Alternate removal and observation modes in the dashboard over several plays. Switching modes does not clear caches. To isolate ad-program removal, also repeat with `mode.txt` set to `observe`; that comparison was not performed under controlled conditions during the initial session.
 
-## Tests du code
+## Code tests
 
-Depuis `reference/proxy` :
+From `reference/proxy`:
 
 ```sh
 PYTHONPATH=dashboard ../../.venv-https/bin/python -m unittest \
@@ -118,23 +118,23 @@ PYTHONPATH=dashboard ../../.venv-https/bin/python -m unittest \
   test_flow_metrics dashboard.test_annotations -q
 ```
 
-Résultat de référence : **48 tests passent**. Ils n'exécutent pas YouTube sur un téléphone et ne remplacent pas le contrôle de lecture.
+Reference result: **48 tests pass**. They do not run YouTube on a phone and do not replace playback checks.
 
-## Diagnostic rapide
+## Quick troubleshooting
 
-| Symptôme | Contrôle utile |
+| Symptom | Useful check |
 | --- | --- |
-| Tout le réseau du téléphone semble arrêté | Vérifier que le Mac est éveillé et que 8877 écoute ; restaurer le réglage de proxy antérieur si nécessaire. |
-| Erreur certificat ou chargement impossible | Vérifier confiance totale et bon certificat, puis que 8880 écoute ; ne pas désactiver la vérification TLS amont. |
-| Pub figée | Vérifier d'abord `video-filter.json: enabled=false`. Conserver heure et événement ; ne pas supposer que retenir plus de médias aidera. |
-| Pub visible, `key_or_crypto_unavailable` ou `unrecognized_or_unauthenticated` | Le repli transmet l'original. Contrôler nouvelle configuration de clés et format ; ne pas compter cette réponse comme filtrée. |
-| Aucun événement lié à la nouvelle vidéo | Contrôler proxy, cache, VPN, réseau cellulaire ou chemin contournant le proxy ; aucune efficacité ne peut être déduite du silence. |
-| Vidéo sans pub mais aucun retrait journalisé | Une pub n'était peut-être pas prévue. Ce démarrage ne prouve pas l'efficacité du filtre. |
+| The phone appears to have lost network access | Check that the Mac is awake and port 8877 is listening; restore the previous proxy setting if needed. |
+| Certificate error or loading failure | Check full trust and the correct certificate, then that port 8880 is listening; do not disable upstream TLS verification. |
+| Frozen ad | First check `video-filter.json: enabled=false`. Preserve the time and event; do not assume that withholding more media will help. |
+| Visible ad, `key_or_crypto_unavailable`, or `unrecognized_or_unauthenticated` | Fallback forwards the original. Check key refresh and format; do not count that response as filtered. |
+| No event related to a newly selected video | Check proxy settings, caching, VPN, cellular data, or a route bypassing the proxy; silence does not demonstrate effectiveness. |
+| No ad but no removal event | An ad may not have been scheduled. This startup does not prove filtering worked. |
 
-## Arrêter et conserver
+## Stop and preserve the setup
 
-Pour arrêter seulement la réécriture, décocher le panneau de programmation (mode `observe`) en laissant le filtre média désactivé. Pour arrêter le déchiffrement, écrire `off` dans `inspection/https-mode.txt` ; conserver le proxy en marche tant qu'il reste configuré sur l'iPhone.
+To stop only rewriting, uncheck the ad-program panel (`observe` mode) while keeping the media filter disabled. To stop decryption, write `off` to `inspection/https-mode.txt`; keep the entry proxy running while it remains configured on the iPhone.
 
-Pour terminer complètement : **restaurer d'abord le proxy Wi-Fi antérieur sur l'iPhone**, puis arrêter les trois services avec Ctrl-C. Le profil de certificat de ce test peut ensuite être retiré dans VPN et gestion de l'appareil. Ne retirer aucun autre profil. Le mode développeur utilisé pour les captures peut être désactivé séparément ; il ne fait pas partie du parcours nécessaire au filtre.
+To stop completely: **first restore the previous Wi-Fi proxy setting on the iPhone**, then stop all three services with Ctrl-C. The test certificate profile can then be removed in VPN & Device Management. Do not remove unrelated profiles. Developer Mode, used for screenshots, can be disabled separately; it is not required for filtering.
 
-Le dossier `inspection/https-ca` doit être conservé de façon privée si l'on veut retrouver la même confiance sans réinstaller le certificat. S'il est perdu, générer une nouvelle autorité et refaire l'installation sur le téléphone. Git conserve le code et les mesures publiables, pas cette clé.
+Keep `inspection/https-ca` privately if you want to retain the same trust without reinstalling a certificate. If it is lost, generate a new authority and repeat installation on the phone. Git preserves the source and publishable measurements, not this key.

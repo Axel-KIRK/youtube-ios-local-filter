@@ -1,10 +1,9 @@
-"""Lecture bornée des seuls IDs/indicateurs de navigation utiles au filtre.
+"""Bounded inspection of the navigation IDs and flags relevant to filtering.
 
-Schémas publics david zeng/innertube : GetWatchRequest.player_request=2,
-watch_next_request=3 ; WatchNextRequest.video_id=2, is_ad_playback=9,
-watch_next_type=14, is_embed_preview=42. Un PlayerRequest seul n'est pas
-une preuve de sélection : il peut demander une publicité/précharger.
-"""
+Public david zeng/innertube schemas: GetWatchRequest.player_request=2,
+watch_next_request=3; WatchNextRequest.video_id=2, is_ad_playback=9,
+watch_next_type=14, is_embed_preview=42. A PlayerRequest alone does not
+prove selection: it may request an advertisement or preload."""
 import json
 import re
 
@@ -19,7 +18,7 @@ def one(fields, number, kind):
     if not found:
         return None
     if len(found) != 1 or found[0][0] != kind:
-        raise ValueError('Champ ambigu')
+        raise ValueError('Ambiguous field')
     return found[0][1]
 
 

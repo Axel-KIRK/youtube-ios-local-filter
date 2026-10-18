@@ -1,4 +1,4 @@
-"""Résumé local de réponses YouTube. Aucun script tiers ni modification de réponse."""
+"""Local YouTube response summaries. No third-party scripts or response rewriting."""
 import json
 import re
 from collections import Counter
@@ -14,29 +14,29 @@ def wire_fields(data):
         value = 0
         for shift in range(0, 70, 7):
             if offset >= len(data):
-                raise ValueError("varint tronqué")
+                raise ValueError("truncated varint")
             byte = data[offset]; offset += 1
             value |= (byte & 127) << shift
             if byte < 128:
                 return value
-        raise ValueError("varint trop long")
+        raise ValueError("varint too long")
 
     while offset < len(data):
         tag = varint(); number, kind = tag >> 3, tag & 7
         if not 0 < number < 2**29:
-            raise ValueError("numéro de champ invalide")
+            raise ValueError("invalid field number")
         if kind == 0:
             value = varint()
         elif kind in (1, 2, 5):
             size = varint() if kind == 2 else 8 if kind == 1 else 4
             if offset + size > len(data):
-                raise ValueError("champ tronqué")
+                raise ValueError("truncated field")
             value = data[offset:offset + size]; offset += size
         else:
-            raise ValueError("type de champ non pris en charge")
+            raise ValueError("unsupported field type")
         result.append((number, kind, value))
         if len(result) > 100000:
-            raise ValueError("trop de champs")
+            raise ValueError("too many fields")
     return result
 
 
@@ -70,7 +70,7 @@ def inspect_body(body, path):
             elif path.endswith("/get_watch"):
                 for number, kind, value in fields:
                     # Watch.contents=1 ; OnesieInnertubeResponse.contents=4
-                    # concerne une autre enveloppe, pas /get_watch.
+                    # refers to a different envelope, not /get_watch.
                     if number == 1 and kind == 2:
                         for sub, subkind, subvalue in wire_fields(value):
                             if sub == 2 and subkind == 2:
@@ -78,7 +78,7 @@ def inspect_body(body, path):
             summary["schema"] = "protobuf-player-candidate" if players else "protobuf-unmapped"
             for player in players:
                 # PlayerResponse : 7=player_ads, 45=ad_placements, 68=ad_slots.
-                # Comptage de champs, pas de publicités effectivement affichées.
+                # Count fields, not advertisements actually displayed.
                 summary["playerMessages"] += 1
                 summary["playerAds"] += sum(n == 7 and k == 2 for n, k, _ in player)
                 summary["adPlacements"] += sum(n == 45 and k == 2 for n, k, _ in player)
@@ -94,14 +94,14 @@ def inspect_body(body, path):
                                     summary['title'] = decoded[:300]
     except (ValueError, UnicodeDecodeError, RecursionError):
         summary["schema"] = "unparsed"
-        summary["parseError"] = "Format non reconnu ; réponse transmise inchangée"
-    # Ne publier ni signature, ni jeton, ni paramètre de requête dans le journal.
+        summary["parseError"] = "Unrecognized format; response forwarded unchanged"
+    # Do not expose signatures, tokens, or query parameters in the log.
     for match in re.finditer(rb'https://[a-zA-Z0-9.-]+\.googlevideo\.com/[a-zA-Z0-9_/-]+', body):
         url = urlsplit(match.group().decode('ascii'))
-        # Les URL de manifestes placent parfois signature/IP dans le chemin.
+        # Manifest URLs sometimes contain signatures or IP addresses in the path.
         path = next((prefix for prefix in ('/videoplayback', '/initplayback',
                     '/api/manifest/hls_variant', '/api/manifest/hls_playlist', '/api/manifest/dash')
-                     if url.path == prefix or url.path.startswith(prefix + '/')), '/[chemin masqué]')
+                     if url.path == prefix or url.path.startswith(prefix + '/')), '/[redacted path]')
         value = 'https://' + url.netloc + path
         if value not in summary["mediaPaths"]:
             summary["mediaPaths"].append(value)

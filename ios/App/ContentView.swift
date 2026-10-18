@@ -10,58 +10,58 @@ struct ContentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Label("Filtre inactif", systemImage: "pause.circle.fill")
+                        Label("Filter inactive", systemImage: "pause.circle.fill")
                             .font(.headline).foregroundStyle(.secondary)
-                        Text("Votre YouTube.\nMoins d'interruptions.")
+                        Text("Your YouTube.\nFewer interruptions.")
                             .font(.largeTitle.bold()).fixedSize(horizontal: false, vertical: true)
-                        Text("Nous préparons une installation simple, directement sur votre iPhone.")
+                        Text("We are preparing a simple setup, right on your iPhone.")
                             .foregroundStyle(.secondary)
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Label("Version de préparation", systemImage: "info.circle")
+                        Label("Preview version", systemImage: "info.circle")
                             .font(.headline)
-                        Text("Cette version vérifie le traitement local. Elle ne filtre pas encore le trafic de YouTube.")
-                        Text("Aucun réglage de votre téléphone n'est modifié.")
+                        Text("This version checks local processing. It does not filter YouTube traffic yet.")
+                        Text("No phone settings are changed.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     .padding().frame(maxWidth: .infinity, alignment: .leading)
                     .background(.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 20))
 
                     VStack(alignment: .leading, spacing: 20) {
-                        Text("L'installation prévue").font(.title2.bold())
-                        setupRow("1", title: "Autoriser la connexion locale",
-                                 detail: "Une validation iOS permettra de diriger les connexions vers le filtre sur cet iPhone.")
-                        setupRow("2", title: "Approuver le certificat",
-                                 detail: "Un guide accompagnera l'installation et la confiance dans Réglages, une seule fois.")
-                        setupRow("3", title: "Activer et ouvrir YouTube",
-                                 detail: "L'application YouTube habituelle sera conservée. Aucun ordinateur ne sera nécessaire.")
+                        Text("The planned setup").font(.title2.bold())
+                        setupRow("1", title: "Allow the local connection",
+                                 detail: "An iOS confirmation will allow connections to reach the filter on this iPhone.")
+                        setupRow("2", title: "Trust the certificate",
+                                 detail: "A guide will walk you through installation and trust in Settings, once.")
+                        setupRow("3", title: "Enable and open YouTube",
+                                 detail: "Keep your usual YouTube app. No computer will be needed.")
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
                         Button(action: runDiagnostic) {
                             HStack {
                                 if checking { ProgressView().tint(.white) }
-                                Text(checking ? "Vérification…" : "Vérifier cette version")
+                                Text(checking ? "Checking…" : "Check this version")
                             }.frame(maxWidth: .infinity).padding(.vertical, 6)
                         }
                         .buttonStyle(.borderedProminent).disabled(checking)
-                        .accessibilityHint("Vérifie des données de test, sans connexion à YouTube.")
+                        .accessibilityHint("Checks test data without connecting to YouTube.")
                         if let diagnostic {
-                            Label(diagnostic.passed ? "Vérification locale réussie" : "La vérification a échoué",
+                            Label(diagnostic.passed ? "Local check passed" : "The check failed",
                                   systemImage: diagnostic.passed ? "checkmark.circle.fill" : "exclamationmark.circle")
                                 .foregroundStyle(diagnostic.passed ? .green : .red)
                             Text(diagnostic.passed
-                                 ? "Les instructions de test ont été retirées et les données vidéo conservées. Cela n'active pas le filtre dans YouTube."
-                                 : "Le filtre reste inactif. Le résultat ne permet pas de valider cette version.")
+                                 ? "Test instructions were removed and video data preserved. This does not enable filtering in YouTube."
+                                 : "The filter remains inactive. This result does not validate this version.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         } else {
-                            Text("Ce test utilise uniquement des données fictives sur votre appareil.")
+                            Text("This check only uses synthetic data on your device.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     }
 
-                    Link("Ce qui a été testé et ce qu'il reste à faire",
+                    Link("What has been tested and what remains to be done",
                          destination: URL(string: "https://github.com/Axel-KIRK/youtube-ios-local-filter")!)
                         .font(.footnote)
                 }

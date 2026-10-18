@@ -1,9 +1,8 @@
-"""Retire uniquement les champs de programmation publicitaire du PlayerResponse.
+"""Remove only advertising-program fields from PlayerResponse.
 
-Les médias restent inchangés. Les champs inconnus sont conservés octet pour octet.
-Onesie est vérifié, déchiffré puis rechiffré localement ; aucune clé n'est persistée.
-Enveloppe inconnue, tronquée ou trop grande : transmission originale.
-"""
+Media stays unchanged. Unknown fields retain their original wire bytes.
+Onesie is verified, decrypted, and re-encrypted locally; keys are never persisted.
+Unknown, truncated, or oversized envelopes pass through unchanged."""
 import gzip
 import hashlib
 import hmac

@@ -1,8 +1,7 @@
-"""Lit uniquement les en-têtes UMP ; ignore les octets média sans les retenir.
+"""Read only UMP headers; skip media bytes without retaining them.
 
-Schéma : github.com/LuanRT/googlevideo, protos/video_streaming/media_header.proto.
-Le varint UMP a un préfixe de longueur, différent du varint Protobuf.
-"""
+Schema: github.com/LuanRT/googlevideo, protos/video_streaming/media_header.proto.
+UMP varints use a length prefix and differ from Protobuf varints."""
 import re
 from collections import Counter
 try:
@@ -36,7 +35,7 @@ def media_header(data):
     for number, kind, value in wire_fields(data):
         if number in (1, 2):
             if number in identifiers or kind != (0 if number == 1 else 2):
-                raise ValueError('Identifiant média ambigu')
+                raise ValueError('Ambiguous media identifier')
             identifiers.add(number)
         if number in numeric and kind == 0:
             result[numeric[number]] = value
@@ -45,7 +44,7 @@ def media_header(data):
             if re.fullmatch(r'[A-Za-z0-9_-]{11}', video_id):
                 result['videoId'] = video_id
             else:
-                raise ValueError('Identifiant vidéo invalide')
+                raise ValueError('Invalid video identifier')
     return result
 
 
@@ -94,7 +93,7 @@ class UmpInspector:
                     self.payload.clear()
                     self.kind = None
         except (ValueError, UnicodeError):
-            self.error = 'En-tête UMP non reconnu ; flux inchangé'
+            self.error = 'Unrecognized UMP header; stream unchanged'
             self.payload.clear()
             self.prefix.clear()
         return emitted

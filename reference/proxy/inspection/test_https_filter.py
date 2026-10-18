@@ -1,4 +1,4 @@
-"""Intégration du filtre dans les callbacks HTTP, sans réseau ni fichiers capturés."""
+"""Filter integration with HTTP callbacks, without network access or captured files."""
 import unittest
 from unittest.mock import patch
 from mitmproxy import http

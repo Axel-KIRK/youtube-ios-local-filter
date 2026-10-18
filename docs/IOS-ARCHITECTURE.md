@@ -1,46 +1,46 @@
-# Application iOS autonome
+# Standalone iOS application
 
-## Objectif utilisateur
+## User goal
 
-Installer une app, suivre quelques validations expliquées en français dans Réglages, activer le filtre, puis continuer d'utiliser YouTube officielle. L'utilisateur final ne doit avoir besoin ni d'un Mac, ni d'un terminal, ni du mode développeur, ni d'une application YouTube modifiée. Le périmètre de ce dépôt est **iOS uniquement**.
+Install an app, follow a few clearly explained confirmations in Settings, enable the filter, and continue using the official YouTube app. The end user should need no Mac, terminal, Developer Mode, or modified YouTube application. This repository targets **iOS only**.
 
-Ce parcours est un objectif ; le prototype validé dépend encore du Mac. Une distribution TestFlight/App Store est distincte d'une compilation et d'une installation de développement.
+This setup is the goal; the validated prototype still depends on a Mac. TestFlight/App Store distribution is separate from compilation and development installation.
 
-## Séparer les fonctions
+## Separate responsibilities
 
-1. **Moteur de réécriture local** : décoder Protobuf et UMP, authentifier Onesie, retirer les trois champs publicitaires, conserver les médias et restituer l'original sur erreur. Porter ce composant en Swift et le tester indépendamment du réseau.
-2. **Transport** : obtenir les réponses HTTPS de YouTube dans un processus iOS qui continue de fonctionner lorsque YouTube est au premier plan. Respecter la validation des certificats amont, les limites mémoire, le flux HTTP et les connexions non ciblées.
-3. **Certificat local** : autorité propre à l'installation, clé privée dans le trousseau, export du certificat public seulement, installation et confiance explicites par l'utilisateur.
-4. **Interface** : quelques étapes, un état exact (« prêt », « inactif », « erreur »), arrêt accessible, aucun compteur présenté abusivement comme un nombre de pubs évitées.
+1. **Local rewriting engine**: decode Protobuf and UMP, authenticate Onesie, remove the three advertising fields, preserve media, and return the original on error. Port this component to Swift and test it independently of networking.
+2. **Transport**: obtain YouTube HTTPS responses in an iOS process that continues running while YouTube is in the foreground. Preserve upstream certificate verification, memory limits, HTTP streaming, and non-targeted connections.
+3. **Local certificate**: an authority unique to each installation, a private key stored in Keychain, export of the public certificate only, and explicit installation and trust by the user.
+4. **Interface**: a few steps, accurate status (ready, inactive, error), an accessible stop control, and no counters misleadingly presented as a number of ads prevented.
 
-La suppression par domaine et le filtre média par ID ne doivent pas devenir le mécanisme principal de l'app : ils ont échoué à assurer la lecture sans pub lors du prototype.
+Domain blocking and video-ID media filtering should not become the app's primary mechanism: they failed to ensure ad-free playback in the prototype.
 
-## Un proxy autonome existe déjà sur iOS
+## Standalone proxies already exist on iOS
 
-**Oui, une app peut proposer un proxy HTTPS local sans Mac.** Charles pour iOS et Proxyman pour iOS documentent ce fonctionnement et une distribution App Store. Charles demande l'autorisation d'une configuration VPN, puis l'installation et la confiance de son certificat. Proxyman explique que son VPN dirige le trafic vers un serveur MITM local au téléphone. Ces exemples établissent la faisabilité d'un proxy autonome ; ils ne valident pas encore notre réécriture YouTube dans ce contexte. [Charles, installation](https://www.charlesproxy.com/documentation/ios/getting-started-1/), [Proxyman, architecture et certificat](https://github.com/ProxymanApp/docs/blob/main/proxyman-ios/vpn-and-proxyman-certificate.md)
+**An app can provide a local HTTPS proxy without a Mac.** Charles for iOS and Proxyman for iOS document this behavior and App Store distribution. Charles asks the user to authorize a VPN configuration, then install and trust its certificate. Proxyman explains that its VPN routes traffic to an MITM server on the phone. These examples establish the feasibility of a standalone proxy; they do not yet validate our YouTube rewriting in that environment. [Charles setup](https://www.charlesproxy.com/documentation/ios/getting-started-1/), [Proxyman architecture and certificate](https://github.com/ProxymanApp/docs/blob/main/proxyman-ios/vpn-and-proxyman-certificate.md)
 
-Le parcours visé est donc : installer notre app, autoriser sa configuration VPN, installer et approuver son certificat une fois, puis activer le filtre. YouTube n'est pas réinstallée. Une version distribuée normalement ne demande pas le mode développeur ; ce mode concerne les essais de développement et de diagnostic.
+The intended setup is therefore: install our app, authorize its VPN configuration, install and trust its certificate once, then enable the filter. YouTube is not reinstalled. A normally distributed release does not require Developer Mode; that mode relates to development testing and diagnostics.
 
-## Contrainte réseau à résoudre dans notre code
+## Networking work still needed in our code
 
-Une app ordinaire ne reçoit pas automatiquement les réponses HTTPS des autres apps. Un bloqueur Safari ne traite pas le trafic de YouTube officielle. Un filtre d'URL ou de domaine seul ne donne pas la réécriture du corps Protobuf nécessaire ici.
+An ordinary app does not automatically receive other apps' HTTPS responses. A Safari content blocker does not handle the official YouTube app's traffic. URL or domain filtering alone does not provide the Protobuf body rewriting needed here.
 
-`NEPacketTunnelProvider` est une piste d'expérimentation technique. Apple indique néanmoins que l'utiliser comme filtre de contenu ou hôte d'un proxy local ne correspond pas à ses usages pris en charge. Cette réserve documentaire **ne prouve pas l'impossibilité technique ou une interdiction de tout proxy iOS**, comme le montrent les applications existantes. Elle oblige à distinguer fonctionnement pratique, architecture officiellement prise en charge et acceptation de notre propre produit. Les contraintes des autres fournisseurs Network Extension doivent aussi être vérifiées. [TN3120](https://developer.apple.com/documentation/technotes/tn3120-expected-use-cases-for-network-extension-packet-tunnel-providers), [TN3134](https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment)
+`NEPacketTunnelProvider` is a technical avenue to investigate. Apple nevertheless states that using it as a content filter or to host a local proxy is outside its supported use cases. This documentation constraint **does not establish technical impossibility or a ban on all iOS proxies**, as existing apps demonstrate. Practical behavior, officially supported architecture, and acceptance of our own product must be distinguished. Deployment constraints of other Network Extension providers also need checking. [TN3120](https://developer.apple.com/documentation/technotes/tn3120-expected-use-cases-for-network-extension-packet-tunnel-providers), [TN3134](https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment)
 
-Un vrai VPN vers un serveur distant serait une autre architecture, avec serveur, coûts et trafic tiers ; ce n'est pas le fonctionnement local visé et il n'est pas déployé dans ce projet. Un proxy dans l'app principale qui disparaît dès qu'iOS la suspend ne satisfait pas non plus le besoin.
+A VPN to a remote server would be a different architecture, with server costs and traffic leaving the device; it is not the intended local design and is not deployed by this project. A proxy in the main app that disappears when iOS suspends it would also fail to meet the requirement.
 
-La confiance d'un certificat installé manuellement demande une action dans Réglages. Cette étape peut être guidée, pas cachée ou activée silencieusement par l'app. [Apple, confiance des certificats](https://support.apple.com/en-us/102390)
+Trusting a manually installed certificate requires an action in Settings. The app can guide this step, but cannot hide it or silently enable trust. [Apple certificate trust instructions](https://support.apple.com/en-us/102390)
 
-## Critères avant une première version utilisable
+## Criteria for an initial usable release
 
-- Le moteur Swift passe les mêmes fixtures synthétiques que le moteur Python, y compris les réponses chiffrées et fragmentées.
-- Le transport reste opérationnel lorsque YouTube est au premier plan et après verrouillage/reprise.
-- La clé de certificat ne sort pas de l'appareil ; aucune autorité partagée entre installations ; aucune collecte de requêtes personnelles.
-- Le premier démarrage sans clé, leur renouvellement et un schéma inconnu laissent une lecture possible ; l'interface rend visible l'absence de filtrage.
-- Un deuxième iPhone personnel peut être configuré par quelqu'un qui n'a pas participé au développement, sans Mac ni mode développeur.
-- Des pubs initiales et intermédiaires, plusieurs sessions et plusieurs versions de YouTube sont testées. Une erreur ou une pub encore visible est consignée avec le bon contexte.
-- La signature, les capacités Apple et le canal de distribution sont validés avant de proposer un lien d'installation. [Règles de distribution VPN](https://developer.apple.com/app-store/review/guidelines/#vpn-apps)
+- The Swift engine passes the same synthetic fixtures as the Python engine, including encrypted and fragmented responses.
+- The transport remains operational while YouTube is in the foreground and across lock/resume.
+- The certificate key stays on the device; installations do not share an authority; personal requests are not collected.
+- A first launch without a key, key renewal, and an unknown schema still allow playback; the interface makes any absence of filtering visible.
+- Someone who did not participate in development can configure a second personal iPhone without a Mac or Developer Mode.
+- Pre-roll and mid-roll ads, multiple sessions, and multiple YouTube versions are tested. Errors and remaining ads are recorded with the relevant context.
+- Signing, Apple capabilities, and the distribution channel are validated before an installation link is offered. [VPN distribution rules](https://developer.apple.com/app-store/review/guidelines/#vpn-apps)
 
-## Ordre d'implémentation
+## Implementation sequence
 
-Le premier incrément a porté le moteur réel en Swift et créé une app de vérification locale, compilée pour le simulateur iOS. Elle affiche « Filtre inactif » tant qu'elle n'a pas accès au trafic de YouTube. L'intégration réseau et la distribution constituent le jalon suivant ; une coquille VPN qui accepte la connexion puis ne transmet aucun paquet serait un défaut, pas un progrès. Voir [l'état d'implémentation et les vérifications](DEVELOPMENT.md).
+The first increment ported the real engine to Swift and created a local verification app, compiled for the iOS simulator. It shows “Filter inactive” until it can access YouTube traffic. Network integration and distribution are the next milestone; a VPN shell that accepts a connection but forwards no packets would be a defect, not progress. See the [implementation status and checks](DEVELOPMENT.md).

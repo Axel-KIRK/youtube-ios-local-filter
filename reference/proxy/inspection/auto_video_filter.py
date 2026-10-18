@@ -1,4 +1,4 @@
-"""Cible temporaire par iPhone, obtenue des demandes de navigation YouTube."""
+"""Temporary per-iPhone target derived from YouTube navigation requests."""
 import json
 import os
 import time
@@ -20,7 +20,7 @@ class AutoSelector:
         now = self.clock()
         old = self.states.get(client, {})
         if old.get('videoId') == navigation['videoId'] and old.get('expiresAtEpoch', 0) > now:
-            return None  # Les retries ne prolongent pas indéfiniment la fenêtre.
+            return None  # Retries must not extend the window indefinitely.
         state = {'clientIp': client, 'videoId': navigation['videoId'],
                  'detectedAt': datetime.fromtimestamp(now, timezone.utc).isoformat(),
                  'expiresAtEpoch': now + window_seconds, 'windowSeconds': window_seconds,

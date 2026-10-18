@@ -1,52 +1,52 @@
-# Développer l'app iOS
+# Developing the iOS app
 
-## Ce qui est implémenté
+## Implemented components
 
-`LocalFilterCore` est un package Swift sans dépendance téléchargée. Il utilise CryptoKit, CommonCrypto et zlib fournis par les plateformes Apple. Il porte le traitement du prototype :
+`LocalFilterCore` is a Swift package with no downloaded dependencies. It uses CryptoKit, CommonCrypto, and zlib provided by Apple platforms. It ports the prototype's processing:
 
-- Parsing Protobuf borné, conservation des octets inconnus et retrait des champs 7/45/68 dans un PlayerResponse reconnu.
-- Réponses API `/player` et `/get_watch`.
-- Réécriture incrémentale UMP, enveloppes Onesie 0 et 25, HMAC vérifié, AES-CTR, gzip borné, IV frais et nouveau HMAC.
-- Transmission des médias à l'identique, retour à l'original sur format inconnu, troncature, absence de clé ou échec d'authentification.
-- Cache de clés hotconfig en mémoire, lié au client, expiration et limite de 32 entrées.
-- Frontière d'intégration HTTP avec contrôle exact des hôtes et chemins.
+- Bounded Protobuf parsing, preservation of unknown bytes, and removal of fields 7/45/68 from a recognized PlayerResponse.
+- `/player` and `/get_watch` API responses.
+- Incremental UMP rewriting, Onesie 0 and 25 envelopes, verified HMAC, AES-CTR, bounded gzip, a fresh IV, and a new HMAC.
+- Byte-for-byte media forwarding, with the original response returned for unknown formats, truncation, missing keys, or authentication failure.
+- An in-memory hotconfig key cache with client isolation, expiration, and a 32-entry limit.
+- An HTTP integration boundary with exact host and path checks.
 
-Le code de `ResponseProcessor` **n'ouvre aucune connexion**. Un futur transport devra lui fournir les réponses déjà déchiffrées par le MITM, appliquer les changements d'en-têtes nécessaires, retirer `x-youtube-hot-hash-data` lorsque `needsFreshConfiguration` le demande, et gérer les annulations et la contre-pression. Il ne faut jamais convertir une sortie vide intermédiaire du flux en fin de réponse HTTP.
+`ResponseProcessor` **does not open connections**. A future transport must supply responses already decrypted by the MITM, apply the necessary header changes, remove `x-youtube-hot-hash-data` when `needsFreshConfiguration` requests it, and handle cancellation and backpressure. An empty intermediate stream output must never be converted into the end of an HTTP response.
 
-Chaque flux et son cache doivent être utilisés sur un même exécuteur série. Les diagnostics sont limités à 64 événements non consommés par réponse ; le consommateur les récupère avec `drainEvents()`. Les clés ne sont pas écrites sur disque. Les limites de mémoire du futur processus réseau restent à mesurer sur appareil.
+Each stream and its cache must be used on the same serial executor. Diagnostics are limited to 64 unconsumed events per response; the consumer retrieves them with `drainEvents()`. Keys are not written to disk. Memory usage in the future networking process still needs measurement on a device.
 
-## Tests Swift
+## Swift tests
 
-Sur un Mac équipé de Xcode complet et Swift 6 (XCTest n'est pas présent dans toutes les installations des seuls Command Line Tools) :
+On a Mac with full Xcode and Swift 6 installed (XCTest is not included in every Command Line Tools-only installation):
 
 ```sh
 swift test
 ```
 
-Avec les seuls Command Line Tools, le moteur peut aussi être compilé et son diagnostic synthétique exécuté sans XCTest :
+With only Command Line Tools, the engine can also be compiled and its synthetic diagnostic run without XCTest:
 
 ```sh
 swift run local-filter-check
 ```
 
-Les fixtures `Tests/LocalFilterCoreTests/Fixtures/onesie.json` sont générées par le moteur Python à partir de données fictives. Elles permettent de vérifier le portage sur les deux enveloppes, avec et sans gzip, sans publier de trafic utilisateur. Leur clé `00 01 … 1f` est une constante de test publique. Pour les régénérer dans l'environnement du prototype :
+The Python engine generates `Tests/LocalFilterCoreTests/Fixtures/onesie.json` from synthetic data. These fixtures check the port against both envelopes, with and without gzip, without publishing user traffic. Their `00 01 … 1f` key is a public test constant. To regenerate them in the prototype environment:
 
 ```sh
 .venv-https/bin/python scripts/generate-fixtures.py
 ```
 
-## Projet iOS
+## iOS project
 
-Le code SwiftUI est dans `ios/App`. Il propose un parcours d'installation lisible et une vérification locale du moteur. Il affiche explicitement un filtre inactif : **ni proxy local, ni extension VPN, ni autorité de certification ne sont encore connectés dans cette version**. Aucun profil n'est installé et aucune confiance n'est modifiée.
+The SwiftUI code is in `ios/App`. It presents a readable setup outline and a local engine check. It explicitly displays an inactive filter: **no local proxy, VPN extension, or certificate authority is connected in this version**. It installs no profile and changes no trust setting.
 
-Avec Xcode complet et XcodeGen installés :
+With full Xcode and XcodeGen installed:
 
 ```sh
 xcodegen generate --spec ios/project.yml
 open ios/LocalFilter.xcodeproj
 ```
 
-Pour compiler sans signature dans le simulateur :
+To build an unsigned simulator app:
 
 ```sh
 xcodebuild -project ios/LocalFilter.xcodeproj -scheme LocalFilter \
@@ -54,10 +54,10 @@ xcodebuild -project ios/LocalFilter.xcodeproj -scheme LocalFilter \
   -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
-La CI exécute les tests Swift, compile cette app pour le simulateur, puis vérifie séparément les tests Python et la régénération des fixtures. Le [premier passage complet](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39141149318), sur le commit `798ebfc945ee75a517296383c78b4cc31a8093da`, a réussi : **16 tests Swift, 48 tests Python, fixtures régénérées à l'identique, compilation simulateur réussie**. Le résultat durable est dans [native-validation.json](../evidence/native-validation.json).
+CI runs the Swift tests, builds the simulator app, and separately checks the Python tests and fixture regeneration. The initial complete run passed: **16 Swift tests, 48 Python tests, byte-identical regenerated fixtures, and a successful simulator build**. The tested revision and CI run are preserved in [native-validation.json](../evidence/native-validation.json).
 
-Une compilation simulateur ne prouve pas un fonctionnement réseau sur iPhone. L'installation sur appareil et TestFlight nécessitent la signature et les capacités du compte Apple du projet ; aucun compte ni profil n'est embarqué.
+A simulator build does not demonstrate working network interception on an iPhone. Device installation and TestFlight require signing and the appropriate capabilities on the project's Apple account; no account or provisioning profile is included.
 
-## Prochain jalon
+## Next milestone
 
-Implémenter et mesurer le proxy HTTPS local maintenu en fonctionnement lorsque YouTube est ouverte, y raccorder le moteur et créer une autorité privée propre à l'installation. Reproduire ensuite le démarrage sans pub **Mac déconnecté**, puis simplifier le guide d'installation. Les conditions de distribution sont distinguées des possibilités techniques dans [l'architecture](IOS-ARCHITECTURE.md).
+Implement and measure the local HTTPS proxy while YouTube is in the foreground, connect the engine, and create a private certificate authority for each installation. Then reproduce ad-free startup **with the Mac disconnected** and simplify the installation guide. Distribution requirements are distinguished from technical feasibility in the [architecture document](IOS-ARCHITECTURE.md).

@@ -1,31 +1,31 @@
 # YouTube iOS Local Filter
 
-Recherche et développement d'un filtre pour **l'application YouTube officielle sur iPhone**. Le principe consiste à retirer les instructions publicitaires envoyées au lecteur, tout en laissant passer les médias.
+Research and development of a filter for the **official YouTube app on iPhone**. The approach removes advertising instructions sent to the player while allowing media to pass through.
 
-**État du projet : un prototype avec proxy sur Mac a fonctionné pendant une session réelle. L'app iOS autonome n'est pas encore un bloqueur utilisable.** L'objectif produit est une installation simple, quelques validations dans Réglages, puis un interrupteur — sans ordinateur ni mode développeur pour l'utilisateur final.
+**Project status: a Mac-based proxy prototype worked during a live session. The standalone iOS app is not yet a usable ad blocker.** The product goal is a simple installation, a few confirmations in Settings, and a switch — with no computer or Developer Mode required for the end user.
 
-## Résultat du 18 octobre 2026
+## October 18, 2026 results
 
-Sur un **iPhone SE de 3e génération, iOS 18.6.1 (22G90)**, le proxy a retiré les champs publicitaires de 43 réponses concernant 41 identifiants vidéo distincts. L'utilisateur a changé manuellement de nombreuses vidéos et n'a observé aucune publicité pendant cette séquence. La progression de la vidéo principale a également été contrôlée.
+On an **iPhone SE (3rd generation), iOS 18.6.1 (22G90)**, the proxy removed advertising fields from 43 responses covering 41 distinct video identifiers. The user manually switched between many videos and reported no ads during that sequence. Main-video playback progress was also checked.
 
-Ce résultat porte sur une session, avec un certificat local approuvé sur l'iPhone. Il ne mesure pas le nombre de publicités évitées. Un dernier signalement ambigu de blocage reste à clarifier ; il est conservé dans le compte rendu.
+This result covers one session with a local certificate explicitly trusted on the iPhone. It does not measure how many ads were prevented. A final ambiguous report of a stall remains unresolved and is preserved in the experiment report.
 
 ## Documentation
 
-- [Compte rendu précis des essais et résultat final](docs/EXPERIMENTS-2026-10-18.md)
-- [Reproduire le prototype et revenir en arrière](docs/REPRODUCE.md)
-- [Architecture iOS, parcours utilisateur et travail restant](docs/IOS-ARCHITECTURE.md)
-- [Moteur Swift, app de vérification et compilation](docs/DEVELOPMENT.md)
-- [Mesures publiables de la session](evidence/session-summary.json)
-- [Code Python du prototype testé](reference/proxy/)
+- [Detailed experiments and final findings](docs/EXPERIMENTS-2026-10-18.md)
+- [Reproduce the prototype and undo the setup](docs/REPRODUCE.md)
+- [iOS architecture, user setup, and remaining work](docs/IOS-ARCHITECTURE.md)
+- [Swift engine, verification app, and build instructions](docs/DEVELOPMENT.md)
+- [Publishable session measurements](evidence/session-summary.json)
+- [Python source of the tested prototype](reference/proxy/)
 
-Le dépôt ne contient ni certificat privé, ni cookies, ni requêtes authentifiées, ni vidéos, ni captures d'écran personnelles. Les fixtures de tests sont synthétiques. La publication du code ne constitue pas une application signée ou une disponibilité sur l'App Store.
+This repository contains no private certificate keys, cookies, authenticated requests, videos, or personal screenshots. Test fixtures are synthetic. Publishing the source does not provide a signed application or an App Store release.
 
-## Première implémentation iOS
+## Initial iOS implementation
 
-Le moteur est porté dans `Sources/LocalFilterCore` : Protobuf, flux UMP, enveloppes Onesie 0/25, authentification, réécriture et conservation des médias. `ios/App` contient une première interface SwiftUI qui vérifie ce traitement avec des données fictives. Le raccordement au trafic réel de YouTube et le parcours d'installation du certificat restent à implémenter. L'interface indique donc **filtre inactif**.
+The engine has been ported to `Sources/LocalFilterCore`: Protobuf, UMP streams, Onesie 0/25 envelopes, authentication, rewriting, and media preservation. `ios/App` contains an initial SwiftUI interface that checks this processing with synthetic data. Connecting it to live YouTube traffic and implementing certificate setup remain outstanding. The interface therefore shows **Filter inactive**.
 
-Validation du 18 octobre : **16 tests Swift et 48 tests Python passent**, fixtures identiques après régénération, compilation de l'app pour le simulateur iOS réussie. [Exécution GitHub Actions](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39141149318), [résultat conservé](evidence/native-validation.json). Aucun essai de filtrage autonome sur iPhone n'est encore revendiqué.
+October 18 validation: **16 Swift tests and 48 Python tests passed**, regenerated fixtures were identical, and the app compiled successfully for the iOS simulator. See the [preserved validation record](evidence/native-validation.json) for the tested revision and CI run. No standalone filtering test on an iPhone is claimed yet.
 
 ```sh
 swift test

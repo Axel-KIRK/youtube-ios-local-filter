@@ -1,12 +1,12 @@
 {
   "date": "2026-10-18",
-  "description": "Hashes of original session source and public derivative. Runtime captures and keys excluded. Publication changes: replace test LAN address; configurable dashboard phone IP.",
+  "description": "Hashes of original session source and the current public derivative. Runtime captures and keys excluded. Publication changes: replace the test LAN address; configurable dashboard phone IP; English comments and user-facing text.",
   "files": [
     {
       "path": "reference/proxy/proxy.py",
       "originalSHA256": "aecf8a222004e713ea06bceb1497b29ffc690158e164e3f93daef3d0e74942e0",
-      "publishedSHA256": "aecf8a222004e713ea06bceb1497b29ffc690158e164e3f93daef3d0e74942e0",
-      "changedForPublication": false
+      "publishedSHA256": "d9a341dd2acae2ae5be769100f906057905f60d3e975a9d78ea1640745296017",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/test_flow_metrics.py",
@@ -17,7 +17,7 @@
     {
       "path": "reference/proxy/dashboard/server.py",
       "originalSHA256": "bd5056ef290745b0a128a3a42154f549d3b035c541716cab04574bd18ec92cc3",
-      "publishedSHA256": "473f5e0f0002c169b577f4ba617778907a7926d1bec4e334be2ede87a9e4c4ec",
+      "publishedSHA256": "0549174e7fbd83f13629ebfa44bc9b51ee4470df0247885ec94817fe8783a50b",
       "changedForPublication": true
     },
     {
@@ -29,62 +29,62 @@
     {
       "path": "reference/proxy/dashboard/dist/index.html",
       "originalSHA256": "a65d003119366a61dbc3d2f51c0d3089fff23cdbebc3bc92afedcb7b3df048c8",
-      "publishedSHA256": "1b6c2f26e409a4a37c7af537474499ecc692d8b57320b6bb7b6574e0cc04e3a5",
+      "publishedSHA256": "204b1001d1f89c59e356a2445bac9d36cb483e9240d3a7844008360bb20955af",
       "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/https_addon.py",
       "originalSHA256": "14f9a4fefe3eb9f06df145989ebb5c639da4b24e932725b51ca54e99fffaa41c",
-      "publishedSHA256": "14f9a4fefe3eb9f06df145989ebb5c639da4b24e932725b51ca54e99fffaa41c",
-      "changedForPublication": false
+      "publishedSHA256": "9de0e97a3372f9cc535b8a6ca8767497264442220cd00ad249ff94bcb06865bf",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/api_inspect.py",
       "originalSHA256": "3eda2d03f1c0a61581f152b2782e061fa5289cc78e58016fe2c15ad5b58bcf18",
-      "publishedSHA256": "3eda2d03f1c0a61581f152b2782e061fa5289cc78e58016fe2c15ad5b58bcf18",
-      "changedForPublication": false
+      "publishedSHA256": "606d9db9162c1e9a0abb8b4b5285e2234e1cfebf4ec7469bac7b9f02585da656",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/ad_program.py",
       "originalSHA256": "56169bac4e642ef7275b57cc0e22c5cecf7d344f5c0e42787fd226f90082cd61",
-      "publishedSHA256": "56169bac4e642ef7275b57cc0e22c5cecf7d344f5c0e42787fd226f90082cd61",
-      "changedForPublication": false
+      "publishedSHA256": "371e010857c02ddb51dd9723589406fca227970beadc9ffbb45fc25cfdff4b6a",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/auto_video_filter.py",
       "originalSHA256": "ef11a0a2a0b058b95db5ddcfdbaabf7c8e3610ac49f0cd42435683e188893925",
-      "publishedSHA256": "ef11a0a2a0b058b95db5ddcfdbaabf7c8e3610ac49f0cd42435683e188893925",
-      "changedForPublication": false
+      "publishedSHA256": "073205e2ed93ef4ebd40fd3f65a24856afa33a3d9bf25205c4a98b6f8cae1a04",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/navigation_inspect.py",
       "originalSHA256": "e1c02341dd21f0077b4da9a6c498085477d540da48456c51a5d1e15f16e21fe4",
-      "publishedSHA256": "e1c02341dd21f0077b4da9a6c498085477d540da48456c51a5d1e15f16e21fe4",
-      "changedForPublication": false
+      "publishedSHA256": "9c69ac1acb3d1e38bfc46fe565ec1c5fe01b7158744f4e1f542452cebbd98ae8",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/onesie_inspect.py",
       "originalSHA256": "1b0e38a9cd8f6cd5a87ae207323ea5b9045a2ddc60dfd4e352533bfa5ac4b541",
-      "publishedSHA256": "1b0e38a9cd8f6cd5a87ae207323ea5b9045a2ddc60dfd4e352533bfa5ac4b541",
-      "changedForPublication": false
+      "publishedSHA256": "d65735fdaa2f6d262cd5ecd6d43524f82ce618f832f3f332e07432564629b4a8",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/ump_filter.py",
       "originalSHA256": "97f177ec4ee2d1eabc36536f3e5725a3faa9e68ffc8abd640b779e8d17e5e2fb",
-      "publishedSHA256": "97f177ec4ee2d1eabc36536f3e5725a3faa9e68ffc8abd640b779e8d17e5e2fb",
-      "changedForPublication": false
+      "publishedSHA256": "d18db9522636e619934e8aa4f19c0360493be90d760eb11a494c6bb61f651ceb",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/ump_inspect.py",
       "originalSHA256": "6ef6032abca8644d68248cacb68cb036feaf3315138ede21748b96bc503468f0",
-      "publishedSHA256": "6ef6032abca8644d68248cacb68cb036feaf3315138ede21748b96bc503468f0",
-      "changedForPublication": false
+      "publishedSHA256": "285327eded916d75616be614e1b23b07fd1c8ebaa00771234f60042767e43853",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/video_filter_config.py",
       "originalSHA256": "d873e5f2780a305c92daad15d5117a70b4f9197869e9b68d9f5108dcd04196c5",
-      "publishedSHA256": "d873e5f2780a305c92daad15d5117a70b4f9197869e9b68d9f5108dcd04196c5",
-      "changedForPublication": false
+      "publishedSHA256": "4e73b8b7bff752a75ee9bd2b792f96571c290c8bedff1a0e39f812021e630035",
+      "changedForPublication": true
     },
     {
       "path": "reference/proxy/inspection/test_ad_program.py",
@@ -101,7 +101,7 @@
     {
       "path": "reference/proxy/inspection/test_https_filter.py",
       "originalSHA256": "0128ebcb5de3501f55bfdea620a469110dd2f38a9dab48fcc30bbce9ff14cde4",
-      "publishedSHA256": "87b99736bacdc1d3ec96d5a56ae883a098b0d5e312bca189d923642113eedff0",
+      "publishedSHA256": "b3cc4bbbeb456fdec11d41a3b8372bba74c3706906a90f8aa36c68161cd10ee2",
       "changedForPublication": true
     },
     {

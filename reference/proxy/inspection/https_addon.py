@@ -1,4 +1,4 @@
-"""Inspection locale YouTube et filtre expérimental par identifiant vidéo."""
+"""Local YouTube inspection and experimental video-ID filtering."""
 import asyncio
 import ipaddress
 import importlib
@@ -65,7 +65,7 @@ class Inspector:
             state = selector.consider(info.get('client_ip'), navigation, config.get('windowSeconds', 45), flow.id)
             if state:
                 self.record('auto_video_selected', **info, path=path, auto_selection=state,
-                            reason='Cible temporaire déduite de la navigation YouTube')
+                            reason='Temporary target inferred from YouTube navigation')
 
     def http_connect(self, flow):
         if not inspect_host(flow.request.host, True) or flow.request.port != 443:
@@ -81,14 +81,14 @@ class Inspector:
     async def server_connect(self, data):
         host, port = data.server.address
         if not inspect_host(host, True) or port != 443:
-            data.server.error = 'Destination hors périmètre'
+            data.server.error = 'Destination outside the inspection scope'
             return
         try:
             addresses = await asyncio.get_running_loop().getaddrinfo(host, port, type=socket.SOCK_STREAM)
             if not addresses or any(not ipaddress.ip_address(a[4][0]).is_global for a in addresses):
                 data.server.error = 'Destination non publique'
         except OSError:
-            data.server.error = 'Échec DNS'
+            data.server.error = 'DNS failure'
 
     def client_disconnected(self, client):
         self.clients.pop(client.id, None)
@@ -100,7 +100,7 @@ class Inspector:
                                           'connection closed', 'connection reset') if code in error), 'other')
         self.record('tls_client_error', **self.client_info(data.context.client),
                     tls_alert=category, tls_detail=error[:400],
-                    reason='Le client a refusé ou interrompu TLS ; vérifier la confiance du certificat et le pinning')
+                    reason='Client rejected or interrupted TLS; check certificate trust and pinning')
 
     def request(self, flow):
         if not inspect_host(flow.request.host, True) or flow.request.port != 443:
@@ -122,12 +122,12 @@ class Inspector:
                 navigation = vault.inspect(flow.request.get_content(strict=False) or b'', client_ip)
                 if navigation:
                     if navigation.get('onesieStatus') == 'key_unavailable':
-                        # Un redémarrage de l'app peut changer la clé malgré son cache hot-config.
+                        # An app restart can change the key despite its hot-config cache.
                         vault.keys = {k: v for k, v in vault.keys.items() if k[0] != client_ip}
                     self.note_navigation(flow, request_path, navigation)
             url = urlsplit(flow.request.path)
             params = parse_qs(url.query)
-            # Valeurs techniques uniquement ; aucune URL signée ni clé de lecture.
+            # Technical values only; no signed URLs or playback keys.
             technical = {key: values[0][:100] for key, values in params.items()
                          if key in ('itag', 'mime', 'source', 'clen', 'dur', 'range', 'live', 'oad')}
             self.record('media_request', **flow.metadata['poc'], request_id=flow.id,
@@ -156,7 +156,7 @@ class Inspector:
         auto_state = selector.active(flow.metadata.get('poc', {}).get('client_ip')) if automatic else None
         target_id = auto_state['videoId'] if auto_state else config['videoId'] if not automatic else None
         strict = is_media_host and config['enabled'] and (bool(auto_state) if automatic else True)
-        # Inclut /initplayback : il peut transporter le début des médias.
+        # Include /initplayback: it can carry the beginning of media.
         gate = UmpGate(target_id) if strict and is_ump and target_id else None
         reject_unknown = strict and not gate and 200 <= flow.response.status_code < 300 and flow.response.status_code != 204
         if gate or reject_unknown:
@@ -179,7 +179,7 @@ class Inspector:
                                              flow.metadata.get('poc', {}).get('client_ip'), vault)
                 program = ad_program.AdProgramStream(key, program_mode == 'remove')
                 flow.metadata['ad_program_stream'] = program
-                # Les changements éventuels ne sont connus qu'après lecture de l'enveloppe.
+                # Potential changes are only known after reading the envelope.
                 if program_mode == 'remove':
                     for name in ('content-length', 'content-md5', 'digest', 'etag', 'content-range'):
                         flow.response.headers.pop(name, None)
@@ -193,7 +193,7 @@ class Inspector:
                         self.record('ump_media_header', **flow.metadata.get('poc', {}),
                                     request_id=flow.id, path=path, ump_header=header)
                 except Exception:
-                    observer.error = 'Analyse des identifiants interrompue'
+                    observer.error = 'Identifier inspection interrupted'
                 if program:
                     chunk = program.feed(chunk)
                     for event in program.events:
@@ -208,8 +208,8 @@ class Inspector:
                     for decision in gate.take_events():
                         self.record('ump_filter_decision', **flow.metadata.get('poc', {}),
                                     request_id=flow.id, path=path, target_video_id=target_id, **decision)
-                    # En HTTP/1 chunked, b'' au milieu serait un chunk terminal.
-                    # Une liste vide signifie réellement « aucun fragment à envoyer ».
+                    # In HTTP/1 chunked encoding, an intermediate b'' would be a terminal chunk.
+                    # An empty list means there is no fragment to send yet.
                     return result if result else []
                 return [] if reject_unknown or not chunk else chunk
 
@@ -217,7 +217,7 @@ class Inspector:
         if reject_unknown:
             counters = {'targetVideoId': target_id, 'receivedBytes': 0,
                         'forwardedBytes': 0, 'withheldBytes': 0,
-                        'reason': 'Format média ou configuration non reconnu ; réponse retenue'}
+                        'reason': 'Unrecognized media format or configuration; response withheld'}
             flow.metadata['unknown_media_filter'] = counters
             self.record('ump_filter_decision', **flow.metadata.get('poc', {}),
                         request_id=flow.id, path=path, decision='blocked_unknown', reason=counters['reason'])
@@ -258,7 +258,7 @@ class Inspector:
         info['body_bytes'] = len(body) if body is not None else None
         if body and flow.request.host in INSPECT_HOSTS and vault.capture(body, info.get('client_ip', '')):
             self.record('navigation_decoder_ready', **flow.metadata.get('poc', {}),
-                        reason='Configuration de lecture reconnue ; décodeur local prêt')
+                        reason='Playback configuration recognized; local decoder ready')
         if 'ump_observer' in flow.metadata:
             info['ump'] = flow.metadata['ump_observer'].summary()
             info['body_bytes'] = info['ump']['bytesObserved']
@@ -284,7 +284,7 @@ class Inspector:
         self.record('api_error', **self.client_info(flow.client_conn),
                     path=urlsplit(flow.request.path).path if flow.request else None,
                     client_http_version=flow.request.http_version if flow.request else None,
-                    reason='Échec de connexion ou de transport HTTPS', **extra)
+                    reason='HTTPS connection or transport failure', **extra)
 
 
 addons = [Inspector()]

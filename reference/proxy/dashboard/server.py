@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Journal local du test YouTube et repères manuels de publicités."""
+"""Local YouTube experiment log and manual advertising annotations."""
 
 import hashlib
 import json
@@ -36,7 +36,7 @@ def read_records(name):
             try:
                 records.append(json.loads(line))
             except json.JSONDecodeError:
-                # L'écriture d'une ligne peut être en cours ; prochain poll.
+                # A line may still be being written; retry on the next poll.
                 continue
     return records
 
@@ -133,7 +133,7 @@ def set_ad_visible(visible):
 
 
 def identified_events(events):
-    """IDs stables à l'ajout de logs, distincts même pour deux lignes identiques."""
+    """IDs remain stable as logs grow and distinguish even identical rows."""
     occurrences = Counter()
     result = []
     for event in events:
@@ -158,7 +158,7 @@ def set_row_suspected(event_id, suspected):
         connection = next((event for event in identified_events(read_records("events.jsonl"))
                            if event["id"] == event_id and event.get("host")), None)
         if connection is None:
-            raise ValueError("Connexion inconnue")
+            raise ValueError("Unknown connection")
         selected = suspected_rows(read_records("row-markers.jsonl"))
         if any(row["id"] == event_id for row in selected) == suspected:
             return
@@ -220,26 +220,26 @@ class Handler(BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", "0"))
             if not 0 < length <= 4096 or self.headers.get_content_type() != "application/json":
-                raise ValueError("Requête invalide")
+                raise ValueError("Invalid request")
             body = json.loads(self.rfile.read(length))
             if not isinstance(body, dict):
                 raise ValueError("Objet attendu")
             if path == "/api/ad-visibility":
                 if type(body.get("visible")) is not bool:
-                    raise ValueError("visible doit être un booléen")
+                    raise ValueError("visible must be a boolean")
                 ad_id = set_ad_visible(body["visible"])
             elif path == '/api/video-filter':
                 with FILTER_LOCK:
                     if body.get('enabled') and ad_program_mode() == 'remove':
-                        raise ValueError('Désactiver le retrait de programmation avant de filtrer les médias')
+                        raise ValueError('Disable ad-program removal before enabling media filtering')
                     if body.get('enabled') and (ROOT / 'inspection/https-mode.txt').read_text().strip() != 'observe-media':
-                        raise ValueError('Inspection des médias inactive')
+                        raise ValueError('Media inspection is inactive')
                     write_video_filter(body.get('enabled'), body.get('videoId'),
                                        body.get('mode', 'manual'), body.get('windowSeconds', 45))
             elif path == '/api/ad-program':
                 mode = body.get('mode')
                 if mode not in ('off', 'observe', 'remove'):
-                    raise ValueError('Mode invalide')
+                    raise ValueError('Invalid mode')
                 with FILTER_LOCK:
                     if mode == 'remove':
                         if (ROOT / 'inspection/https-mode.txt').read_text().strip() != 'observe-media':
@@ -252,7 +252,7 @@ class Handler(BaseHTTPRequestHandler):
                     temporary.replace(path_mode)
             else:
                 if type(body.get("suspected")) is not bool or not isinstance(body.get("eventId"), str):
-                    raise ValueError("Sélection invalide")
+                    raise ValueError("Invalid selection")
                 set_row_suspected(body["eventId"], body["suspected"])
         except (ValueError, UnicodeDecodeError):
             self.send_error(400)

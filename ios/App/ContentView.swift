@@ -6,9 +6,11 @@ struct ContentView: View {
     @StateObject private var connection = ConnectionController()
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("certificateTrustConfirmed") private var trustConfirmed = false
     @State private var diagnostic: DiagnosticResult?
     @State private var checking = false
+    #if DEBUG
+    @State private var ranLaunchCheck = false
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -44,10 +46,16 @@ struct ContentView: View {
                             .buttonStyle(.bordered).disabled(connection.snapshot == nil || connection.busy)
                             Text("Allow the download, then open Settings → General → VPN & Device Management and install LocalFilter Personal CA. Next, open General → About → Certificate Trust Settings and enable full trust for it.")
                                 .font(.footnote).foregroundStyle(.secondary)
-                            Toggle("I enabled full trust in Settings", isOn: $trustConfirmed)
-                                .font(.subheadline)
-                            Text("This is your confirmation. The app has not independently verified trust.")
-                                .font(.caption).foregroundStyle(.secondary)
+                            Text("iOS requires you to confirm installation and trust in Settings once. Return here afterward; LocalFilter checks the connection automatically.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                            if connection.checkingCertificate {
+                                ProgressView("Checking certificate and connection…")
+                            } else if connection.certificateVerified {
+                                Label("Certificate and connection verified", systemImage: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                            }
+                            Button("Check setup again") { Task { await connection.checkCertificate() } }
+                                .disabled(connection.busy || connection.snapshot?.mode != .setup)
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
 
@@ -58,11 +66,11 @@ struct ContentView: View {
                         } label: {
                             HStack {
                                 if connection.busy { ProgressView() }
-                                Text("Enable filtering")
+                                Text(connection.checkingCertificate ? "Checking setup…" : "Verify and enable filtering")
                             }.frame(maxWidth: .infinity).padding(.vertical, 6)
                         }
                         .buttonStyle(.borderedProminent)
-                        .disabled(!trustConfirmed || connection.busy || connection.snapshot?.mode == .filter)
+                        .disabled(connection.busy || connection.snapshot?.mode == .filter)
                         if connection.running {
                             Button("Stop local connection", role: .destructive) { connection.stop() }
                                 .buttonStyle(.bordered).disabled(connection.busy)
@@ -118,6 +126,14 @@ struct ContentView: View {
             .navigationTitle("LocalFilter").navigationBarTitleDisplayMode(.inline)
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
+                #if DEBUG
+                if !ranLaunchCheck, ProcessInfo.processInfo.arguments.contains("--verify-local-setup") {
+                    ranLaunchCheck = true
+                    await connection.start(.filter)
+                }
+                #endif
+                await connection.refresh()
+                await connection.checkCertificate()
                 while !Task.isCancelled {
                     await connection.refresh()
                     do { try await Task.sleep(nanoseconds: 2_000_000_000) } catch { break }

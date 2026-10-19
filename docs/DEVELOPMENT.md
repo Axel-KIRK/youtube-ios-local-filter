@@ -39,6 +39,8 @@ The Python engine generates `Tests/LocalFilterCoreTests/Fixtures/onesie.json` fr
 
 The SwiftUI code is in `ios/App`; the experimental provider is in `ios/Tunnel`. The app requests a local connection, guides explicit certificate installation/trust, starts/stops filtering, and displays aggregate activity. The extension uses the Swift HTTPS proxy and its own Keychain authority. It does not silently install a profile or enable trust. Signed installation and app launch succeeded on the test iPhone; routing and filtering still need device validation. See [the native prototype procedure](NATIVE-PROTOTYPE.md).
 
+`LocalFilterSetup` adds an iOS 17/macOS 14 system-trust preflight through an explicitly configured loopback proxy. Two additional integration tests verify rejection of an untrusted certificate and no direct fallback when the proxy is unavailable. All 11 transport/setup tests passed on October 19. The signed app was updated and its missing-certificate activation guard passed on the iPhone: filtering remained off in setup mode. No synthetic trust exception is used by the app. The Debug-only `--verify-local-setup` launch argument exercises this same activation path for device diagnostics.
+
 With full Xcode and XcodeGen installed:
 
 ```sh

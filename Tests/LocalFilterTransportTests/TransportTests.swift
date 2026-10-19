@@ -4,10 +4,42 @@ import NIOCore
 import NIOPosix
 import NIOHTTP1
 import NIOSSL
+import LocalFilterSetup
 @testable import LocalFilterTransport
 @testable import LocalFilterCore
 
 final class TransportTests: XCTestCase {
+    func testSetupCheckRejectsUntrustedAuthority() async throws {
+        guard #available(macOS 14.0, *) else { throw XCTSkip("System proxy configuration requires macOS 14") }
+        let connection = expectation(description: "preflight actually reaches the local proxy")
+        connection.assertForOverFulfill = false
+        let lab = try Lab(log: { event in
+            if event == "connect_accepted" { connection.fulfill() }
+            XCTAssertNotEqual(event, "request_received", "An untrusted certificate must stop HTTP before forwarding")
+        }) { _ in Reply(Data()) }
+        defer { lab.stop() }
+        do {
+            try await ConnectionPreflight.verify(port: UInt16(lab.port))
+            XCTFail("A self-signed authority absent from system trust must be rejected")
+        } catch {
+            XCTAssertEqual(error as? ConnectionPreflight.Failure, .certificateNotTrusted)
+        }
+        await fulfillment(of: [connection], timeout: 2)
+    }
+
+    func testSetupCheckDoesNotFallBackWhenProxyIsUnavailable() async throws {
+        guard #available(macOS 14.0, *) else { throw XCTSkip("System proxy configuration requires macOS 14") }
+        let lab = try Lab { _ in Reply(Data()) }
+        let port = UInt16(lab.port)
+        lab.stop()
+        do {
+            try await ConnectionPreflight.verify(port: port)
+            XCTFail("A closed local proxy must not fall back to a direct connection")
+        } catch {
+            XCTAssertEqual(error as? ConnectionPreflight.Failure, .connectionUnavailable)
+        }
+    }
+
     func testScopeAndResolvedAddressRestrictions() throws {
         XCTAssertEqual(DestinationPolicy.authority("YOUTUBEI.GOOGLEAPIS.COM:443"), "youtubei.googleapis.com")
         for value in ["example.org:443", "googlevideo.com.evil.test:443", "youtubei.googleapis.com:80",

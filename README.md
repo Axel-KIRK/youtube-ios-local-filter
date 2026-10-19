@@ -14,6 +14,8 @@ A later test using the **Swift HTTPS proxy and engine** also started videos with
 
 On October 19, the app and embedded Network Extension were successfully signed and installed on that iPhone, and setup mode started. The device was provisioned through an activated developer membership. **The first autonomous filtering trial failed: YouTube did not load.** A subsequent check found only the old Mac certificate installed, despite the initial report that the new certificate was ready. This establishes development installation, not working autonomous filtering; see the [installation record](evidence/native-installation.json).
 
+The setup flow now checks real TLS trust before redirecting YouTube. The corrected build was tested on the phone with the new certificate still missing: it rejected activation and kept filtering off. iOS still requires the user to install and trust the downloaded certificate in Settings once. Autonomous ad removal remains unverified.
+
 ## Documentation
 
 - [Detailed experiments and final findings](docs/EXPERIMENTS-2026-10-18.md)

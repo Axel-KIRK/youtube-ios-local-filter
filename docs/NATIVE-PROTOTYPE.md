@@ -10,6 +10,8 @@ The provider starts with eight maximum client connections. Setup mode serves the
 
 The interface distinguishes setup, waiting for traffic, and received responses. Counters represent completed/rewritten responses, not prevented ads. Status messages contain only aggregates and the local public-certificate URL. No request URLs, cookies, video IDs, or payloads are persisted. A three-second status timeout prevents an unavailable provider from leaving the app waiting indefinitely.
 
+The app now verifies certificate trust and connectivity before applying filtering settings. It starts in setup mode, then makes an unauthenticated HEAD request to the YouTube player API through an explicit loopback HTTP CONNECT proxy using the device's normal TLS trust. The ephemeral session has no cookies, credential store, cache, redirects, custom trust anchors, or direct-connection fallback. Missing trust or an unavailable connection leaves the provider in setup mode without redirecting YouTube. Successful checks are repeated immediately before enabling filtering, and restarting in filter mode resets probe counters. Returning from Settings also triggers a setup check. A manual checkbox is no longer accepted as evidence of trust.
+
 ## Development installation
 
 1. Generate the project with `xcodegen generate --spec ios/project.yml` and open `ios/LocalFilter.xcodeproj` in compatible Xcode.
@@ -18,7 +20,7 @@ The interface distinguishes setup, waiting for traffic, and received responses. 
 4. **For an autonomous test, first turn off the old manual Wi-Fi proxy.** Record its previous setting for rollback. Otherwise the Mac can produce a misleading success.
 5. In LocalFilter, choose **Prepare connection** and approve the iOS VPN-configuration prompt. This starts setup mode; it does not redirect YouTube yet.
 6. Choose **Open certificate in Safari**. Install LocalFilter Personal CA through Settings → General → VPN & Device Management, then enable full trust in Settings → General → About → Certificate Trust Settings. This is a new device-local authority; the older Mac PoC certificate does not replace it.
-7. Return to LocalFilter, confirm that trust was enabled, and choose **Enable filtering**. That confirmation is a user attestation, not an independent trust check.
+7. Return to LocalFilter. It checks the real certificate and connection automatically. Choose **Verify and enable filtering**; filtering starts only after another successful check. If verification fails, complete the indicated setup step or retry when the network is available. The provider remains in setup mode, so YouTube is not redirected.
 8. Reopen the official YouTube app and choose several fresh videos. Confirm that the app receives traffic and reports rewriting. Compare actual playback with the displayed counts.
 
 The app and embedded extension compiled successfully for the iOS simulator in [CI](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39145003403). A [local unsigned arm64 iPhone build](../evidence/local-ios-build.json) also succeeded after installing the iOS platform in Xcode 26.6.
@@ -34,6 +36,12 @@ The diagnostic build passed all nine transport integration tests and was signed,
 A separate Mac `curl` request through a temporary USB forward to the **iPhone's** proxy successfully validated its exported public CA and received the expected HTTP 405 from a GET to `/youtubei/v1/player`. This checks the proxy and its upstream path, not iOS certificate trust or YouTube playback. It adds one completed response to that diagnostic session; counters must be reset before evaluating a fresh playback trial. The USB forward was stopped after the check.
 
 **Correction to the initial certificate report:** the device's profile inventory listed only the older Mac PoC certificate, and the user confirmed the same in Settings. The new LocalFilter CA was not installed. Its installation remains the next step; the missing trust is a likely cause of the downstream TLS failure, but a successful retest is required before claiming resolution.
+
+The subsequent setup correction passed 11 transport/setup tests, including rejection of an untrusted authority and refusal to fall back to a direct connection when the proxy is unavailable. A signed build was installed on the same phone. A Debug-only `--verify-local-setup` launch option exercised the normal activation path without UI taps: the device reported `certificate_not_trusted`, remained in `mode=setup`, and did not enable filtering. This validates the missing-certificate guard on the phone; it is not a successful playback test.
+
+## What setup can automate
+
+The app creates and retains its authority, serves the public certificate, verifies the actual connection, and controls filtering. On an ordinary personally managed iPhone, downloading a profile still requires installation in Settings and separate root-certificate trust approval. Apple documents automatic deployment through device management or Apple Configurator, which is a different installation model and is not added by this app. Downloaded profiles also expire if they are not installed within eight minutes; the app can serve the same public certificate again without replacing its key. [Profile installation](https://support.apple.com/en-us/102400), [Certificate trust](https://support.apple.com/en-us/102390).
 
 ## Required device checks
 

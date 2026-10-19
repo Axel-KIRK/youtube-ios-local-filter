@@ -66,5 +66,20 @@
     "installation": "success",
     "appLaunch": "success",
     "logging": "aggregate counters and fixed failure categories only; no raw error descriptions or URLs added to the extension log"
+  },
+  "setupPreflight": {
+    "implementation": "Replaced manual trust attestation with a real system-TLS HEAD check through the loopback proxy before enabling filtering; automatic recheck on return from Settings",
+    "privacy": "Ephemeral session, no cookies or credential storage, no redirects, no custom trust anchors, no direct fallback",
+    "tests": "11 transport/setup tests passed, including untrusted-authority rejection and unavailable-proxy no-fallback checks",
+    "signedBuild": "BUILD SUCCEEDED",
+    "installation": "success",
+    "deviceNegativeTest": {
+      "trigger": "Debug --verify-local-setup launch option uses normal activation path",
+      "certificateState": "new LocalFilter CA not installed",
+      "outcome": "certificate_not_trusted",
+      "providerModeAfterFailure": "setup",
+      "filteringEnabled": false
+    },
+    "remaining": "User installation and trust approval in Settings, then a successful YouTube playback trial"
   }
 }

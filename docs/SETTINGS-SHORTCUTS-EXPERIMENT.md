@@ -42,7 +42,7 @@ The unsigned file is not a ready-to-install deliverable. Apple's signing command
 
 Apple documents distributing notarized shortcuts through iCloud links or signed files, and launching saved shortcuts from another app using `shortcuts://run-shortcut`. The signing prerequisite is a build/distribution issue; the proposed user flow must not ask consumers to construct the shortcut or use developer tools. See [Apple's Shortcuts distribution session](https://developer.apple.com/videos/play/wwdc2021/10232/), [command-line signing](https://support.apple.com/guide/shortcuts-mac/apd455c82f02/mac), and [running a saved shortcut by URL](https://support.apple.com/guide/shortcuts/apd624386f42/ios).
 
-The generator now also prepares a **LocalFilter Trust** candidate for `prefs:root=General&path=About/CERT_TRUST_SETTINGS`. That destination has not yet been validated through a saved shortcut. The app's current progress fix and explicit navigation fallback are described in [certificate setup progress](CERTIFICATE-SETUP-PROGRESS.md).
+The generator now also prepares a **LocalFilter Trust** candidate for `prefs:root=General&path=About/CERT_TRUST_SETTINGS`. A subsequent [level-by-level experiment](SETTINGS-HIERARCHY-EXPERIMENT.md) validated that destination through a saved input-based helper, and reached the exact pending-profile installation sheet using its complete identifier. Signed import remains untested. The app's current progress fix and explicit navigation fallback are described in [certificate setup progress](CERTIFICATE-SETUP-PROGRESS.md).
 
 ## Other approaches checked
 

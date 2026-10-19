@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-19",
+  "baseCommit": "476d0f0",
+  "environment": "iPhone SE layout simulator, iOS 26.5 (23F77)",
+  "scope": "Navigation only, using real taps in a Debug LocalFilter screen",
+  "simulatorBuild": "passed",
+  "directGeneralCalls": {
+    "App-prefs:root=General": "Accepted but opened Settings root",
+    "App-prefs:General": "Accepted but opened Settings root",
+    "prefs:root=General": "Rejected",
+    "settings-navigation://com.apple.Settings.General": "Rejected"
+  },
+  "workingCaller": {
+    "bridge": "LocalFilter button -> shortcuts://run-shortcut with text input -> saved helper -> Settings",
+    "helper": "LocalFilter Profiles 1",
+    "creation": "Duplicated and edited in the Shortcuts UI",
+    "actions": ["Open URLs using Shortcut Input", "Nothing"],
+    "cloudLoginRequiredForTheseLocalTests": false,
+    "consumerDistributionTested": false
+  },
+  "successfulDestinations": ["General", "Device Management", "About", "Certificate Trust Settings", "Pending certificate installation sheet"],
+  "installationComparisons": [
+    {"route": "ManagedConfigurationList/PurgatoryInstallRequested", "result": "profile list only"},
+    {"route": "DownloadedProfile without ID", "result": "profile list only"},
+    {"route": "DownloadedProfile with incorrectly truncated 64-character ID", "result": "profile list only"},
+    {"route": "DownloadedProfile with complete observed 65-character ID", "result": "certificate installation sheet without tapping the profile row"}
+  ],
+  "profileIdentifier": {
+    "source": "Simulator Settings follow-up URL for the freshly downloaded test certificate",
+    "observedRelationship": "lowercase SHA-256 of DER bytes followed by a",
+    "sampleCount": 1,
+    "crossVersionRuleEstablished": false,
+    "correction": "Initial fixed-length regex dropped the suffix; extracting the complete ID corrected the test"
+  },
+  "testCertificateInstalled": false,
+  "testCertificateTrusted": false,
+  "vpnStarted": false,
+  "physicalPhoneModified": false,
+  "productionSetupChanged": false,
+  "privateKeysOrRawLogsPublished": false,
+  "screenshots": ["settings-hierarchy-trust.png", "settings-hierarchy-install.png"]
+}

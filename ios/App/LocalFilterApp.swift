@@ -7,6 +7,8 @@ struct LocalFilterApp: App {
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("--settings-navigation-test") {
                 SettingsNavigationProbeView()
+            } else if ProcessInfo.processInfo.arguments.contains("--settings-hierarchy-test") {
+                SettingsHierarchyProbeView()
             } else if ProcessInfo.processInfo.arguments.contains("--settings-shortcuts-test") {
                 SettingsShortcutsProbeView()
             } else if ProcessInfo.processInfo.arguments.contains("--certificate-setup-preview") {

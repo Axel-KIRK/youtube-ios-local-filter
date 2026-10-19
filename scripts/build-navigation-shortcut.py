@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the fixed profile-list navigation experiment; optionally sign with Apple's CLI.
+"""Generate a fixed certificate Settings navigation experiment; optionally sign with Apple's CLI.
 
 The unsigned file is a source artifact, not an installable shortcut. Signing
 requires an iCloud session on the build Mac. No account data belongs in this file.
@@ -12,12 +12,14 @@ import subprocess
 import uuid
 
 
-NAME = "LocalFilter Profiles"
-DESTINATION = "prefs:root=General&path=ManagedConfigurationList"
-URL_ACTION_ID = str(uuid.uuid5(uuid.NAMESPACE_URL, DESTINATION)).upper()
+DESTINATIONS = {
+    "profiles": ("LocalFilter Profiles", "prefs:root=General&path=ManagedConfigurationList"),
+    "trust": ("LocalFilter Trust", "prefs:root=General&path=About/CERT_TRUST_SETTINGS"),
+}
 
 
-def workflow():
+def workflow(destination):
+    url_action_id = str(uuid.uuid5(uuid.NAMESPACE_URL, destination)).upper()
     return {
         "WFWorkflowClientVersion": "3036.0.4.2",
         "WFWorkflowMinimumClientVersion": 900,
@@ -35,8 +37,8 @@ def workflow():
             {
                 "WFWorkflowActionIdentifier": "is.workflow.actions.url",
                 "WFWorkflowActionParameters": {
-                    "UUID": URL_ACTION_ID,
-                    "WFURLActionURL": DESTINATION,
+                    "UUID": url_action_id,
+                    "WFURLActionURL": destination,
                 },
             },
             {
@@ -44,7 +46,7 @@ def workflow():
                 "WFWorkflowActionParameters": {
                     "WFInput": {
                         "Value": {
-                            "OutputUUID": URL_ACTION_ID,
+                            "OutputUUID": url_action_id,
                             "OutputName": "URL",
                             "Type": "ActionOutput",
                         },
@@ -64,13 +66,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("local-evidence/navigation-shortcuts"))
     parser.add_argument("--sign", action="store_true", help="Ask Apple's shortcuts CLI to sign for distribution")
+    parser.add_argument("--destination", choices=DESTINATIONS, default="profiles")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
-    unsigned = args.output / f"{NAME}.unsigned.shortcut"
-    unsigned.write_bytes(plistlib.dumps(workflow(), sort_keys=True))
+    name, destination = DESTINATIONS[args.destination]
+    unsigned = args.output / f"{name}.unsigned.shortcut"
+    unsigned.write_bytes(plistlib.dumps(workflow(destination), sort_keys=True))
     print(f"Unsigned source: {unsigned}")
     if args.sign:
-        signed = args.output / f"{NAME}.shortcut"
+        signed = args.output / f"{name}.shortcut"
         subprocess.run([
             "shortcuts", "sign", "--mode", "anyone",
             "--input", str(unsigned), "--output", str(signed),

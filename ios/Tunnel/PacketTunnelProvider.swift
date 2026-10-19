@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import NetworkExtension
 import LocalFilterTransport
 import OSLog
@@ -27,6 +28,12 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
                 self.pendingStart = completionHandler
                 self.startToken = token
                 let authority = try AuthorityStore.loadOrCreate()
+                let certificateID = SHA256.hash(data: try authority.certificateDER())
+                    .map { String(format: "%02x", $0) }.joined()
+                // Keep the receipt across extension restarts, scoped to this CA.
+                // No certificate/key data is stored in preferences or logs.
+                let receiptKey = "certificateServedAt." + certificateID
+                let receipt = UserDefaults.standard.object(forKey: receiptKey) as? Date
                 var configuration = ProxyConfiguration()
                 configuration.port = 0
                 configuration.maximumConnections = 8
@@ -35,6 +42,9 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
                     guard let self else { return }
                     self.stateLock.lock()
                     self.snapshot?.record(event)
+                    if event == "certificate_served", let date = self.snapshot?.certificateServedAt {
+                        UserDefaults.standard.set(date, forKey: receiptKey)
+                    }
                     let failure = self.snapshot?.lastFailure
                     self.stateLock.unlock()
                     if (event.contains("_failed ") || event.contains("_rejected ")), let failure {
@@ -44,7 +54,8 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
                 self.proxy = proxy
                 let port = try proxy.start()
                 self.stateLock.lock()
-                self.snapshot = TunnelStatus(mode: mode, certificateURL: "http://127.0.0.1:\(port)/certificate.cer")
+                self.snapshot = TunnelStatus(mode: mode, certificateURL: "http://127.0.0.1:\(port)/certificate.cer",
+                                             certificateID: certificateID, certificateServedAt: receipt)
                 self.stateLock.unlock()
 
                 let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")

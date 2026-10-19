@@ -142,7 +142,12 @@ private final class ConnectHandler: ChannelInboundHandler, RemovableChannelHandl
                         ("Connection", "close")])
                     context.channel.write(HTTPServerResponsePart.head(.init(version: .http1_1, status: .ok, headers: headers)), promise: nil)
                     context.channel.write(HTTPServerResponsePart.body(.byteBuffer(context.channel.allocator.buffer(bytes: certificate))), promise: nil)
-                    context.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).whenComplete { _ in context.close(promise: nil) }
+                    context.channel.writeAndFlush(HTTPServerResponsePart.end(nil)).whenComplete { result in
+                        // A successful write is a delivery receipt, not proof that
+                        // Safari accepted the profile or that iOS installed it.
+                        if case .success = result { self.server.log("certificate_served") }
+                        context.close(promise: nil)
+                    }
                 } catch { sendError(context.channel, status: .internalServerError) }
                 return
             }

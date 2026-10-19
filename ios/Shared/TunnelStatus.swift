@@ -7,6 +7,8 @@ enum ConnectionMode: String, Codable {
 struct TunnelStatus: Codable {
     var mode: ConnectionMode
     var certificateURL: String
+    var certificateID: String?
+    var certificateServedAt: Date?
     var responses = 0
     var rewrittenResponses = 0
     var upstreamFailures = 0
@@ -20,6 +22,7 @@ struct TunnelStatus: Codable {
     var lastActivity: Date?
 
     mutating func record(_ event: String) {
+        if event == "certificate_served" { certificateServedAt = Date() }
         if event == "connection_accepted" { connections += 1 }
         else if event == "connect_accepted" { connectRequests += 1 }
         else if event == "request_received" { decryptedRequests += 1 }

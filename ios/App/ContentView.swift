@@ -8,7 +8,8 @@ struct ContentView: View {
     @StateObject private var connection = ConnectionController()
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("certificateDownloadOpenedAt") private var certificateDownloadOpenedAt = 0.0
+    @State private var settingsDestination: CertificateSettingsDestination?
+    @State private var pendingGuideDestination: CertificateSettingsDestination?
     @State private var diagnostic: DiagnosticResult?
     @State private var checking = false
     @State private var showingGuide = false
@@ -62,17 +63,31 @@ struct ContentView: View {
                 .padding(20).frame(maxWidth: 640).frame(maxWidth: .infinity)
             }
             .navigationTitle("LocalFilter").navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showingGuide) {
+            .sheet(isPresented: $showingGuide, onDismiss: {
+                settingsDestination = pendingGuideDestination
+                pendingGuideDestination = nil
+            }) {
                 NavigationStack {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 22) {
                             Text("Two approvals, once").font(.title2.bold())
                             Text("LocalFilter prepares everything it can. iOS requires you to approve the certificate in Settings. Return to LocalFilter afterward; it checks the setup and finishes activation automatically.")
-                            CertificateGuide()
+                            CertificateSetupView(progress: connection.certificateProgress,
+                                download: downloadCertificate, navigate: { destination in
+                                    pendingGuideDestination = destination
+                                    showingGuide = false
+                                }, check: { Task { await connection.start(.filter) } })
                         }.padding(24)
                     }
                     .navigationTitle("Setup guide").navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showingGuide = false } } }
+                }
+            }
+            .sheet(item: $settingsDestination) { destination in
+                CertificateSettingsHelp(destination: destination) {
+                    UserDefaults.standard.set(true, forKey: "navigationShortcutAdded." + destination.rawValue)
+                    settingsDestination = nil
+                    runSettingsShortcut(destination)
                 }
             }
             .onAppear {
@@ -131,23 +146,20 @@ struct ContentView: View {
     }
 
     private var certificateContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("iOS approval required").font(.title2.bold())
-            Text("Install and trust the certificate in Settings, then return here. LocalFilter will check and finish automatically.")
-                .font(.subheadline)
-            Button { downloadCertificate() } label: {
-                Text("Download certificate").frame(maxWidth: .infinity)
-            }
-                .buttonStyle(.borderedProminent).controlSize(.large)
-            Text("After the download, open Settings from your Home Screen. Direct navigation to certificate installation is still being investigated.")
-                .font(.caption).foregroundStyle(.secondary)
-            CertificateGuide()
-            DisclosureGroup("Need help?") {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("No “Profile Downloaded”? Look under General → VPN & Device Management, or download again. iOS removes uninstalled downloads after eight minutes.")
-                    Button("Download certificate again") { downloadCertificate() }
-                    Button("Check again") { Task { await connection.start(.filter) } }
-                }.font(.subheadline).padding(.top, 10)
+        CertificateSetupView(progress: connection.certificateProgress,
+            download: downloadCertificate, navigate: { destination in
+                if UserDefaults.standard.bool(forKey: "navigationShortcutAdded." + destination.rawValue) {
+                    runSettingsShortcut(destination)
+                } else { settingsDestination = destination }
+            }, check: { Task { await connection.start(.filter) } })
+    }
+
+    private func runSettingsShortcut(_ destination: CertificateSettingsDestination) {
+        openURL(destination.runURL) { opened in
+            if !opened {
+                UserDefaults.standard.removeObject(forKey: "navigationShortcutAdded." + destination.rawValue)
+                connection.message = "Shortcuts could not open. Use Help and diagnostics for the setup steps."
+                settingsDestination = destination
             }
         }
     }
@@ -206,6 +218,12 @@ struct ContentView: View {
         DisclosureGroup("Help and diagnostics") {
             VStack(alignment: .leading, spacing: 14) {
                 Button("Show setup guide") { showingGuide = true }
+                Button("Set up navigation buttons again") {
+                    for destination in [CertificateSettingsDestination.profiles, .trust] {
+                        UserDefaults.standard.removeObject(forKey: "navigationShortcutAdded." + destination.rawValue)
+                    }
+                    settingsDestination = .profiles
+                }
                 if let status = connection.snapshot {
                     Text("Mode: \(status.mode.rawValue)")
                     Text("Connections: \(status.connections) · HTTPS tunnels: \(status.connectRequests) · Requests: \(status.decryptedRequests)")
@@ -246,8 +264,7 @@ struct ContentView: View {
         Task {
             await connection.start(.filter)
             // Open the download once after the user's action, never on every foreground/check failure.
-            if connection.certificateRequired,
-               Date().timeIntervalSince1970 - certificateDownloadOpenedAt > 8 * 60 {
+            if connection.certificateRequired, !connection.certificateProgress.canContinue {
                 downloadCertificate()
             }
         }
@@ -261,7 +278,7 @@ struct ContentView: View {
         openURL(url) { opened in
             if opened {
                 // Opening Safari does not prove that the download or installation succeeded.
-                certificateDownloadOpenedAt = Date().timeIntervalSince1970
+                connection.recordCertificateDownloadOpened()
             } else {
                 connection.message = "The certificate download could not open. Try again."
             }
@@ -274,30 +291,5 @@ struct ContentView: View {
             diagnostic = await Task.detached(priority: .userInitiated) { LocalDiagnostic.run() }.value
             checking = false
         }
-    }
-}
-
-private struct CertificateGuide: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            instruction(1, title: "Install LocalFilter Personal CA",
-                        path: "Profile Downloaded → Install")
-            instruction(2, title: "Turn on full trust",
-                        path: "General → About → Certificate Trust Settings → LocalFilter Personal CA")
-        }
-    }
-
-    private func instruction(_ number: Int, title: String, path: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text("\(number)").font(.subheadline.bold())
-                .frame(width: 28, height: 28)
-                .background(.tint.opacity(0.12), in: Circle())
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title).font(.subheadline.bold())
-                Text(path).font(.subheadline)
-            }
-        }
-        .fixedSize(horizontal: false, vertical: true)
-        .accessibilityElement(children: .combine)
     }
 }

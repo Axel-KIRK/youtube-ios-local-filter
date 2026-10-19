@@ -12,6 +12,14 @@ final class ConnectionController: ObservableObject {
     @Published private(set) var checkingCertificate = false
     @Published private(set) var certificateVerified = false
     @Published private(set) var certificateRequired = false
+    @Published private(set) var certificateProgress = UserDefaults.standard.data(forKey: "certificateSetupProgress")
+        .flatMap { try? JSONDecoder().decode(CertificateSetupProgress.self, from: $0) } ?? CertificateSetupProgress() {
+        didSet {
+            if let data = try? JSONEncoder().encode(certificateProgress) {
+                UserDefaults.standard.set(data, forKey: "certificateSetupProgress")
+            }
+        }
+    }
     @Published private(set) var hasCompletedSetup = UserDefaults.standard.bool(forKey: "hasCompletedSetup")
     // This is an activation request, never evidence that a certificate is trusted.
     @Published private(set) var enableWhenReady = UserDefaults.standard.bool(forKey: "enableWhenReady") {
@@ -70,7 +78,17 @@ final class ConnectionController: ObservableObject {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 3) { reply.complete(.success(nil)) }
                 } catch { reply.complete(.failure(error)) }
             }
+            if let id = snapshot?.certificateID {
+                let legacyTime = UserDefaults.standard.double(forKey: "certificateDownloadOpenedAt")
+                certificateProgress.observe(certificateID: id, servedAt: snapshot?.certificateServedAt,
+                    legacyOpenedAt: legacyTime > 0 ? Date(timeIntervalSince1970: legacyTime) : nil)
+                UserDefaults.standard.removeObject(forKey: "certificateDownloadOpenedAt")
+            }
         } catch { message = "Connection status is unavailable. Try again in a moment." }
+    }
+
+    func recordCertificateDownloadOpened() {
+        certificateProgress.recordDownloadOpened()
     }
 
     func start(_ mode: ConnectionMode) async {

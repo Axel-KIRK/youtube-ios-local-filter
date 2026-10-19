@@ -61,16 +61,22 @@ final class TransportTests: XCTestCase {
     }
 
     func testPublicCertificateDownloadIsExplicitAndLimited() throws {
-        let disabled = try Lab { _ in Reply(Data()) }
+        let disabled = try Lab(log: { event in
+            XCTAssertNotEqual(event, "certificate_served")
+        }) { _ in Reply(Data()) }
         defer { disabled.stop() }
         XCTAssertEqual(try disabled.fetch("http://127.0.0.1:\(disabled.port)/certificate.cer", useProxy: false).status, 403)
-        let enabled = try Lab(servesCertificate: true) { _ in Reply(Data()) }
+        let receipt = expectation(description: "public certificate successfully written")
+        let enabled = try Lab(servesCertificate: true, log: { event in
+            if event == "certificate_served" { receipt.fulfill() }
+        }) { _ in Reply(Data()) }
         defer { enabled.stop() }
         let response = try enabled.fetch("http://127.0.0.1:\(enabled.port)/certificate.cer", useProxy: false)
         XCTAssertEqual(response.status, 200)
         XCTAssertEqual(response.body, enabled.publicDER)
         XCTAssertTrue(response.headers.contains("application/x-x509-ca-cert"))
         XCTAssertEqual(try enabled.fetch("http://127.0.0.1:\(enabled.port)/ca-key.pem", useProxy: false).status, 403)
+        wait(for: [receipt], timeout: 2)
     }
 
     func testDownstreamCancellationDoesNotReportUpstreamFailure() throws {

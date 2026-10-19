@@ -71,6 +71,15 @@ struct SettingsShortcutsProbeView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 Text(result).font(.footnote).foregroundStyle(.secondary)
+                Button("Copy trust link and create shortcut") {
+                    UIPasteboard.general.string = CertificateSettingsDestination.trust.settingsURL
+                    open("shortcuts://create-shortcut", id: "shortcut-create-trust")
+                }.buttonStyle(.bordered)
+                Text("For the trust test, use the same two actions and name it LocalFilter Trust.")
+                    .font(.subheadline)
+                Button("Open trust with shortcut") {
+                    open(CertificateSettingsDestination.trust.runURL.absoluteString, id: "shortcut-trust")
+                }.buttonStyle(.borderedProminent)
                 Text("Navigation only. This test does not install a certificate, change trust, or start filtering.")
                     .font(.caption).foregroundStyle(.secondary)
             }

@@ -9,6 +9,8 @@ struct LocalFilterApp: App {
                 SettingsNavigationProbeView()
             } else if ProcessInfo.processInfo.arguments.contains("--settings-shortcuts-test") {
                 SettingsShortcutsProbeView()
+            } else if ProcessInfo.processInfo.arguments.contains("--certificate-setup-preview") {
+                CertificateSetupPreview()
             } else {
                 ContentView()
             }

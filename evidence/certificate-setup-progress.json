@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-19",
+  "baseCommit": "1031715",
+  "scope": "Certificate setup state and action buttons; not autonomous ad removal",
+  "automatedTests": {
+    "command": "swift test --filter 'TransportTests|CertificateSetupProgressTests'",
+    "passed": 15,
+    "failed": 0,
+    "coverage": [
+      "Real loopback public-certificate HTTP response emits a delivery event",
+      "Disabled certificate endpoint and private-key requests are rejected",
+      "A receipt survives model encoding, relaunch and a missing later receipt",
+      "Changing the CA invalidates prior progress",
+      "Legacy Safari-open state allows continuation without claiming delivery",
+      "Opening Safari alone does not confirm delivery",
+      "Existing TLS tests reject an untrusted CA and an unavailable proxy"
+    ]
+  },
+  "builds": {
+    "iOSSimulatorDebug": "passed",
+    "signedIPhoneDebug": "passed",
+    "toolchain": "Xcode 26.6, iOS SDK 26.5"
+  },
+  "simulator": {
+    "device": "iPhone SE layout, iOS 26.5",
+    "launchArgument": "--certificate-setup-preview",
+    "component": "The same CertificateSetupView used by normal setup; no connection controller or VPN",
+    "observed": [
+      "Download certificate and separate installation/trust buttons appear initially",
+      "Simulated Safari opening alone keeps Download certificate visible",
+      "Simulated successful delivery removes the primary Download certificate button",
+      "Simulated replacement CA restores Download certificate"
+    ],
+    "limits": "Synthetic presentation test, not actual Safari profile installation. Repeated simulator UI interruptions prevented finishing the trust-shortcut editing/navigation test."
+  },
+  "physicalPhone": {
+    "model": "iPhone SE (3rd generation)",
+    "iOS": "18.6.1",
+    "installation": "success",
+    "launch": "success",
+    "observedScreen": "Finish certificate setup, Install LocalFilter Personal CA, Turn on full trust; no primary Download certificate button",
+    "migration": "Legacy continuation preserved, progress bound to current CA, old preferences key removed",
+    "newDeliveryReceipt": false,
+    "trustCheck": "Still waiting for certificate approval; filtering remains off",
+    "screenshot": "Inspected locally; not published"
+  },
+  "navigation": {
+    "profilesBridge": "Previously verified in iOS 26.5 simulator; see settings-shortcuts-bridge.json",
+    "trustBridge": "Fixed source prepared; destination and signed import not validated",
+    "signedDistribution": "Blocked: Apple's signing CLI still requires an iCloud session on the Mac",
+    "importLinksBundled": false,
+    "currentButtonBehavior": "Explicit manual destination help until a shortcut is available or the user confirms an existing saved helper",
+    "consumerGoalMet": false
+  }
+}

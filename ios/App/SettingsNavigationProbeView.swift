@@ -47,4 +47,43 @@ struct SettingsNavigationProbeView: View {
         .buttonStyle(.bordered).controlSize(.large)
     }
 }
+
+/// Tests a user-created Shortcuts bridge separately from production onboarding.
+/// A successful open only launches Shortcuts; it does not verify the destination.
+struct SettingsShortcutsProbeView: View {
+    @State private var result = "Requires a shortcut named LocalFilter Profiles."
+    private let logger = Logger(subsystem: "com.axelkirk.localfilter", category: "navigation")
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Shortcuts navigation test").font(.title2.bold())
+                Text("One-time test setup")
+                Button("Copy link and create shortcut") {
+                    UIPasteboard.general.string = "prefs:root=General&path=ManagedConfigurationList"
+                    open("shortcuts://create-shortcut", id: "shortcut-create")
+                }
+                .buttonStyle(.borderedProminent)
+                Text("In Shortcuts, add Open URLs and paste the copied link. Add Nothing afterward. Name the shortcut LocalFilter Profiles, save it, and return here.")
+                    .font(.subheadline)
+                Button("Open profiles with shortcut") {
+                    open("shortcuts://run-shortcut?name=LocalFilter%20Profiles", id: "shortcut-profiles")
+                }
+                .buttonStyle(.borderedProminent)
+                Text(result).font(.footnote).foregroundStyle(.secondary)
+                Text("Navigation only. This test does not install a certificate, change trust, or start filtering.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .controlSize(.large)
+            .padding(20)
+        }
+    }
+
+    private func open(_ text: String, id: String) {
+        UIApplication.shared.open(URL(string: text)!, options: [:]) { accepted in
+            logger.info("Shortcut navigation \(id, privacy: .public): accepted=\(accepted, privacy: .public)")
+            result = accepted ? "Shortcuts opened; check the actual destination." : "iOS could not open Shortcuts."
+        }
+    }
+}
 #endif

@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-19",
+  "baseCommit": "df81a15",
+  "scope": "Settings navigation experiment only; not certificate installation or YouTube playback",
+  "environment": {
+    "type": "iPhone SE (3rd generation) simulator",
+    "iOS": "26.5",
+    "build": "23F77",
+    "physicalPhoneTested": false
+  },
+  "safari": {
+    "invocation": "Actual taps on anchors in a local HTTP diagnostic page",
+    "urls": [
+      "prefs:root=General&path=ManagedConfigurationList",
+      "App-prefs:root=General&path=ManagedConfigurationList",
+      "settings-navigation://com.apple.Settings.General/ManagedConfigurationList"
+    ],
+    "result": "Each displayed Safari's invalid-address alert; none opened the target"
+  },
+  "shortcuts": {
+    "creation": "Created in the simulator's Shortcuts UI, not injected into its database",
+    "name": "LocalFilter Profiles",
+    "action": "Open URLs with a fixed literal URL, followed by Nothing to suppress output",
+    "destination": "prefs:root=General&path=ManagedConfigurationList",
+    "directRunResult": "Opened Settings > General > Device Management; heading observed as Gestion de l'appareil and empty profile list",
+    "nativeBridge": "shortcuts://run-shortcut?name=LocalFilter%20Profiles",
+    "nativeBridgePrecondition": "Settings was manually returned to its root screen before launching the app test",
+    "nativeBridgeInvocation": "A real tap on Open profiles with shortcut in LocalFilter's isolated Debug view",
+    "initialNativeBridgeResult": "Reached Device Management, then a delayed Shortcuts privacy prompt asked permission to output the URL text",
+    "correction": "Append Nothing after Open URLs; do not return the URL to the calling app",
+    "correctedNativeBridgeResult": "One tap in LocalFilter reached Device Management. A later UI observation and screenshot still showed the destination without the output-permission prompt; no permission approval was clicked.",
+    "diagnosticPreparationButton": "Opened a new Shortcuts editor; the simulator pasteboard contained exactly the fixed profile-list URL",
+    "debugLaunchArgument": "--settings-shortcuts-test",
+    "simulatorBuild": "success",
+    "simulatorInstallation": "success"
+  },
+  "distribution": {
+    "generator": "scripts/build-navigation-shortcut.py",
+    "generatedArtifact": "Unsigned source containing URL, Open URLs and Nothing actions; no dynamic input, network request actions or output",
+    "generatedArtifactImportTested": false,
+    "generatedArtifactSyntaxValidation": "plutil -lint passed",
+    "signingAttempt": "Apple's shortcuts sign --mode anyone",
+    "signingResult": "Error: In order to do this, you must be signed into iCloud.",
+    "limit": "The UI-created simulator shortcut works. A distributable signed file and its Add Shortcut flow have not been validated. The manual diagnostic setup does not meet the consumer onboarding requirement."
+  },
+  "screenshot": "settings-shortcuts-profiles-simulator.png",
+  "limits": [
+    "No physical iOS 18 bridge test yet",
+    "The simulator does not reproduce the physical device's full VPN/profile-management UI",
+    "No pending profile or certificate trust screen was tested in this experiment",
+    "No App Store acceptance or cross-version reliability claim",
+    "A shortcut must exist under the expected name; UIKit's accepted callback alone cannot establish success"
+  ]
+}

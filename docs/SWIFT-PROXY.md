@@ -2,7 +2,7 @@
 
 ## Current scope
 
-`LocalFilterTransport` connects real HTTPS sockets to `LocalFilterCore`. `local-filter-proxy` runs this code on a Mac so transport behavior can be tested before device provisioning is available. It is a **YouTube-only CONNECT backend**, not a complete VPN or a general browsing proxy. Non-target CONNECT requests receive 403. An experimental iOS extension now starts this server, but signed device operation has not been verified.
+`LocalFilterTransport` connects real HTTPS sockets to `LocalFilterCore`. `local-filter-proxy` runs this code on a Mac so transport behavior can be tested independently of device provisioning. It is a **YouTube-only CONNECT backend**, not a complete VPN or a general browsing proxy. Non-target CONNECT requests receive 403. An experimental iOS extension embeds this server. Signed installation and app launch succeeded on October 19; on-device routing and filtering remain unverified.
 
 The backend accepts `youtubei.googleapis.com`, `youtubei-att.googleapis.com`, and valid `*.googlevideo.com` names on port 443. It resolves a destination off the event loop, rejects local/reserved addresses, and connects to the checked address while validating the original hostname and upstream TLS certificate. It offers HTTP/1.1 downstream and upstream. Other traffic must use a separate forwarding layer or remain outside the routing scope.
 

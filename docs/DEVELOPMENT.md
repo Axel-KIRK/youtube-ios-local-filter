@@ -37,7 +37,7 @@ The Python engine generates `Tests/LocalFilterCoreTests/Fixtures/onesie.json` fr
 
 ## iOS project
 
-The SwiftUI code is in `ios/App`; the experimental provider is in `ios/Tunnel`. The app requests a local connection, guides explicit certificate installation/trust, starts/stops filtering, and displays aggregate activity. The extension uses the Swift HTTPS proxy and its own Keychain authority. It does not silently install a profile or enable trust. This code still needs signed device validation; see [the native prototype procedure](NATIVE-PROTOTYPE.md).
+The SwiftUI code is in `ios/App`; the experimental provider is in `ios/Tunnel`. The app requests a local connection, guides explicit certificate installation/trust, starts/stops filtering, and displays aggregate activity. The extension uses the Swift HTTPS proxy and its own Keychain authority. It does not silently install a profile or enable trust. Signed installation and app launch succeeded on the test iPhone; routing and filtering still need device validation. See [the native prototype procedure](NATIVE-PROTOTYPE.md).
 
 With full Xcode and XcodeGen installed:
 
@@ -58,8 +58,10 @@ CI runs the Swift tests, builds the simulator app, and separately checks the Pyt
 
 The same app and extension also compiled locally for a generic arm64 iPhone with Xcode 26.6 and the iPhoneOS 26.5 SDK, with signing disabled. See [the local build record](../evidence/local-ios-build.json).
 
+On October 19, the same source revision was built with automatic development signing, installed on the paired iPhone, and launched successfully. Both the app and embedded extension have verified signatures and the packet-tunnel entitlement. See the [signed installation record](../evidence/native-installation.json). Generated projects, provisioning profiles, certificates, private keys, and build logs remain local.
+
 Neither an unsigned device build nor a simulator build demonstrates working network interception on an iPhone. Device installation and TestFlight require signing and the appropriate capabilities on the project's Apple account; no account or provisioning profile is included.
 
 ## Next milestone
 
-The Mac Swift HTTPS proxy has passed a real iPhone playback trial. Provision and validate the new extension, its per-installation Keychain storage, and certificate setup. Then reproduce ad-free startup **with the Mac disconnected** and simplify the installation guide. Distribution requirements are distinguished from technical feasibility in the [architecture document](IOS-ARCHITECTURE.md).
+The Mac Swift HTTPS proxy has passed a real iPhone playback trial. The native app is now provisioned and installed. Validate the extension's routing, its per-installation Keychain storage, and certificate setup. Then reproduce ad-free startup **with the Mac disconnected** and simplify the installation guide. Distribution requirements are distinguished from technical feasibility in the [architecture document](IOS-ARCHITECTURE.md).

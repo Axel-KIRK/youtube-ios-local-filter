@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-19",
+  "sourceCommit": "3415740ed1615b037d20f2f2c1d557a3f12029f4",
+  "xcode": "26.6 (17F113)",
+  "sdk": "iPhoneOS 26.5",
+  "configuration": "Debug",
+  "device": {
+    "model": "iPhone SE (3rd generation)",
+    "productType": "iPhone14,6",
+    "iOS": "18.6.1",
+    "build": "22G90",
+    "developerMode": "enabled"
+  },
+  "provisioning": "Activated Apple Developer membership; development profiles issued for both targets and the connected iPhone",
+  "signedBuild": "BUILD SUCCEEDED",
+  "signatureVerification": [
+    {
+      "bundleID": "com.axelkirk.localfilter",
+      "signatureVerified": true,
+      "entitlements": [
+        "packet-tunnel-provider"
+      ],
+      "provisionedDeviceCount": 1
+    },
+    {
+      "bundleID": "com.axelkirk.localfilter.Tunnel",
+      "signatureVerified": true,
+      "entitlements": [
+        "packet-tunnel-provider"
+      ],
+      "provisionedDeviceCount": 1
+    }
+  ],
+  "installation": "success",
+  "appLaunch": "success",
+  "oldManualWiFiProxy": "disabled, confirmed by the user before native setup",
+  "nativeConnectionSetup": "Ready for certificate setup, confirmed by the user after allowing the iOS VPN configuration; connected provider returned setup status",
+  "autonomousYouTubeFiltering": "not yet verified",
+  "distribution": "development installation only; no TestFlight or App Store validation",
+  "privateEvidence": "Build, provisioning, installation, and launch records retained locally; no signing material, device identifiers, or account details published",
+  "certificateInstallation": "User confirmed download through the on-device certificate endpoint, installation, and full trust in iOS Settings"
+}

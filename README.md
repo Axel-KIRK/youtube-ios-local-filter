@@ -12,6 +12,8 @@ This result covers one session with a local certificate explicitly trusted on th
 
 A later test using the **Swift HTTPS proxy and engine** also started videos without ads on the same phone. During the recorded window it rewrote 21 responses and passed 40 successful media responses. The Mac was still required. Three unclassified upstream failures were logged; they are preserved in the [Swift session record](evidence/swift-proxy-session.json), not hidden by the positive user report.
 
+On October 19, the app and embedded Network Extension were successfully signed and installed on that iPhone, and the app launched. The device was provisioned through an activated developer membership. This establishes development installation, not working autonomous filtering; see the [installation record](evidence/native-installation.json).
+
 ## Documentation
 
 - [Detailed experiments and final findings](docs/EXPERIMENTS-2026-10-18.md)
@@ -28,7 +30,7 @@ This repository contains no private certificate keys, cookies, authenticated req
 
 ## Initial iOS implementation
 
-The engine has been ported to `Sources/LocalFilterCore`: Protobuf, UMP streams, Onesie 0/25 envelopes, authentication, rewriting, and media preservation. `ios/App` now includes an experimental connection setup, certificate installation guide, start/stop controls, and a synthetic engine check. `ios/Tunnel` connects the HTTPS proxy to a Network Extension, stores its authority in Keychain, and reports aggregate activity. **This on-device transport has not yet been provisioned or validated on an iPhone.** See the [native prototype procedure](docs/NATIVE-PROTOTYPE.md).
+The engine has been ported to `Sources/LocalFilterCore`: Protobuf, UMP streams, Onesie 0/25 envelopes, authentication, rewriting, and media preservation. `ios/App` now includes an experimental connection setup, certificate installation guide, start/stop controls, and a synthetic engine check. `ios/Tunnel` connects the HTTPS proxy to a Network Extension, stores its authority in Keychain, and reports aggregate activity. **The app and extension are provisioned and installed on the test iPhone; autonomous filtering remains unverified.** See the [native prototype procedure](docs/NATIVE-PROTOTYPE.md).
 
 `Sources/LocalFilterTransport` now connects that engine to a scoped HTTPS proxy, runnable on a Mac as `local-filter-proxy`. A real iPhone playback session succeeded through this backend, alongside synthetic TLS integration tests; an autonomous on-device test is still outstanding.
 

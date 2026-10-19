@@ -21,7 +21,11 @@ The interface distinguishes setup, waiting for traffic, and received responses. 
 7. Return to LocalFilter, confirm that trust was enabled, and choose **Enable filtering**. That confirmation is a user attestation, not an independent trust check.
 8. Reopen the official YouTube app and choose several fresh videos. Confirm that the app receives traffic and reports rewriting. Compare actual playback with the displayed counts.
 
-The app and embedded extension compiled successfully for the iOS simulator in [CI](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39145003403). A [local unsigned arm64 iPhone build](../evidence/local-ios-build.json) also succeeded after installing the iOS platform in Xcode 26.6. These steps are a test procedure, **not a report of a completed native installation**. At the time this increment was written, signing still awaited developer-program activation.
+The app and embedded extension compiled successfully for the iOS simulator in [CI](https://github.com/Axel-KIRK/youtube-ios-local-filter/actions/runs/39145003403). A [local unsigned arm64 iPhone build](../evidence/local-ios-build.json) also succeeded after installing the iOS platform in Xcode 26.6.
+
+On October 19, an activated membership provisioned both targets for the test iPhone SE (3rd generation), iOS 18.6.1. A signed Debug build succeeded; both signatures and their `packet-tunnel-provider` entitlements were verified. Installation and app launch succeeded through `devicectl`. The user confirmed that the old manual Wi-Fi proxy was disabled and that preparing the connection reached **Ready for certificate setup**. This state requires a connected provider and a decoded setup-status response. **These results establish installation and setup-mode startup, not successful local proxy routing or ad removal.** Certificate trust and live filtering are separate checks; see the [installation record](../evidence/native-installation.json).
+
+The user subsequently confirmed downloading and installing the new device-local certificate and enabling full trust in Settings. This is a user report; the app's trust toggle is not independent validation of iOS trust. Both app and extension processes were observed running during setup. Playback and traffic counters remain the next acceptance check.
 
 ## Required device checks
 

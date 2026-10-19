@@ -1,6 +1,6 @@
 # Apple signing and distribution status
 
-Checked against Apple's documentation on October 18, 2026. **Device provisioning and App Store acceptance are not yet validated for this product.** The developer's enrollment is pending activation; Xcode currently shows only a Personal Team after sign-in. Personal account details and the enrollment reference are intentionally not part of this public repository.
+Apple documentation was checked on October 18, 2026; local signing results were updated on October 19. **Development provisioning and installation succeeded. App Store acceptance and autonomous filtering remain unverified.** The activated membership issued development profiles for both the app and its Network Extension, including the test iPhone. Both signatures were verified, installation succeeded, and the app launched. See the [installation record](../evidence/native-installation.json). Personal account details, team identifiers, device identifiers, and signing material are intentionally excluded from this public repository.
 
 ## Testing and signing
 

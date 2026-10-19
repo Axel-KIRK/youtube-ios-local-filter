@@ -35,8 +35,36 @@
   "appLaunch": "success",
   "oldManualWiFiProxy": "disabled, confirmed by the user before native setup",
   "nativeConnectionSetup": "Ready for certificate setup, confirmed by the user after allowing the iOS VPN configuration; connected provider returned setup status",
-  "autonomousYouTubeFiltering": "not yet verified",
+  "autonomousYouTubeFiltering": "Failed first trial: the user reported that YouTube did not load while filtering was enabled; LocalFilter displayed Waiting for YouTube traffic. No completed response was established; failure stage remains under investigation.",
   "distribution": "development installation only; no TestFlight or App Store validation",
   "privateEvidence": "Build, provisioning, installation, and launch records retained locally; no signing material, device identifiers, or account details published",
-  "certificateInstallation": "User confirmed download through the on-device certificate endpoint, installation, and full trust in iOS Settings"
+  "certificateInstallation": "Initial user report of installation/trust was contradicted by the device profile inventory and a subsequent Settings check: only the old Mac PoC certificate was installed. The new LocalFilter Personal CA installation is still pending.",
+  "firstFailureRecovery": "User confirmed YouTube loaded again after Stop local connection",
+  "firstFailureDiagnostics": {
+    "acceptedConnections": 15,
+    "connectRequests": 15,
+    "decryptedRequests": 0,
+    "completedResponses": 0,
+    "upstreamFailures": 0,
+    "downstreamTLSFailures": 15,
+    "rejections": 0,
+    "scope": "one observed status snapshot, not the full session total",
+    "debuggerFinding": "EOF during TLS handshake for youtubei.googleapis.com"
+  },
+  "proxyControlRequest": {
+    "client": "Mac curl through a temporary USB port forward to the iPhone proxy",
+    "method": "GET",
+    "endpoint": "https://youtubei.googleapis.com/youtubei/v1/player",
+    "expectedNonPlaybackStatus": 405,
+    "actualStatus": 405,
+    "certificateVerification": "passed using only the public certificate exported by the iPhone",
+    "limitation": "This checks the on-device proxy and its upstream path; it does not verify iOS certificate trust or YouTube playback. The request contributes one completed response to that diagnostic session. The USB forwarder was stopped afterward."
+  },
+  "diagnosticBuild": {
+    "transportTests": "9 passed, including TLS failure and rejection classification",
+    "signedBuild": "BUILD SUCCEEDED",
+    "installation": "success",
+    "appLaunch": "success",
+    "logging": "aggregate counters and fixed failure categories only; no raw error descriptions or URLs added to the extension log"
+  }
 }

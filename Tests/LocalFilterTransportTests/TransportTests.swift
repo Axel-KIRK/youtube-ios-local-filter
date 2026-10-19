@@ -128,12 +128,18 @@ final class TransportTests: XCTestCase {
     }
 
     func testUntrustedUpstreamFailsAndOutOfScopeConnectIsRejected() throws {
-        let lab = try Lab(trustUpstream: false) { _ in Reply(Data("must not pass".utf8)) }
+        let upstreamTLS = expectation(description: "upstream TLS rejection is identifiable")
+        let scopedRejection = expectation(description: "out-of-scope CONNECT is identifiable")
+        let lab = try Lab(trustUpstream: false, log: { event in
+            if event.hasPrefix("upstream_failed ") && event.hasSuffix("reason=tls_handshake") { upstreamTLS.fulfill() }
+            if event == "connect_rejected reason=destination_or_request" { scopedRejection.fulfill() }
+        }) { _ in Reply(Data("must not pass".utf8)) }
         defer { lab.stop() }
         XCTAssertEqual(try lab.fetch("https://youtubei.googleapis.com/youtubei/v1/player").status, 502)
         let denied = try lab.fetch("https://example.org/", allowCurlFailure: true)
         XCTAssertNotEqual(denied.exitCode, 0)
         XCTAssertTrue(denied.headers.contains("403"))
+        wait(for: [upstreamTLS, scopedRejection], timeout: 2)
     }
 }
 

@@ -121,18 +121,20 @@ final class ResponseRelay: ChannelInboundHandler {
         server.log("request_cancelled host=\(host) path=\(safePath)")
     }
 
-    func fail() {
+    func fail(reason: String = "closed") {
         guard !done else { return }
         guard downstream.isActive else { cancel(); return }
         done = true; completed()
-        server.log("upstream_failed host=\(host) path=\(safePath)")
+        server.log("upstream_failed host=\(host) path=\(safePath) reason=\(reason)")
         if sentHead { downstream.close(promise: nil) }
         else { sendError(downstream, status: .badGateway) }
     }
     func channelInactive(context: ChannelHandlerContext) { if !done { fail() } }
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
-        if event is IdleStateHandler.IdleStateEvent { fail(); context.close(promise: nil) }
+        if event is IdleStateHandler.IdleStateEvent { fail(reason: "response_timeout"); context.close(promise: nil) }
         else { context.fireUserInboundEventTriggered(event) }
     }
-    func errorCaught(context: ChannelHandlerContext, error: Error) { fail(); context.close(promise: nil) }
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
+        fail(reason: transportFailureCategory(error)); context.close(promise: nil)
+    }
 }

@@ -1,6 +1,7 @@
 import Foundation
 import NetworkExtension
 import LocalFilterTransport
+import OSLog
 
 /// Experimental proxy-only settings. No default IP route or packet discard loop.
 /// A successful start is not evidence that YouTube honors the proxy on this device.
@@ -11,6 +12,8 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
     private var snapshot: TunnelStatus?
     private var pendingStart: ((Error?) -> Void)?
     private var startToken: UUID?
+    private let diagnostics = Logger(subsystem: "com.axelkirk.localfilter", category: "transport")
+    private var lastDiagnosticReport: String?
 
     override func startTunnel(options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void) {
         let mode = (options?["mode"] as? String).flatMap(ConnectionMode.init(rawValue:)) ?? .setup
@@ -32,7 +35,11 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
                     guard let self else { return }
                     self.stateLock.lock()
                     self.snapshot?.record(event)
+                    let failure = self.snapshot?.lastFailure
                     self.stateLock.unlock()
+                    if (event.contains("_failed ") || event.contains("_rejected ")), let failure {
+                        self.diagnostics.error("Transport failure: \(failure, privacy: .public)")
+                    }
                 }
                 self.proxy = proxy
                 let port = try proxy.start()
@@ -90,7 +97,13 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         guard messageData == Data("status".utf8) else { completionHandler?(nil); return }
         stateLock.lock()
         let status = snapshot
+        let report = status.map {
+            "mode=\($0.mode.rawValue) connections=\($0.connections) tunnels=\($0.connectRequests) requests=\($0.decryptedRequests) responses=\($0.responses) rewritten=\($0.rewrittenResponses) upstreamFailures=\($0.upstreamFailures) downstreamFailures=\($0.downstreamFailures) rejections=\($0.rejections)"
+        }
+        let changed = report != lastDiagnosticReport
+        lastDiagnosticReport = report
         stateLock.unlock()
+        if changed, let report { diagnostics.info("Transport status: \(report, privacy: .public)") }
         completionHandler?(status.flatMap { try? JSONEncoder().encode($0) })
     }
 

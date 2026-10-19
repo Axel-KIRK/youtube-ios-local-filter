@@ -51,10 +51,15 @@ public final class ProxyServer {
             .childChannelOption(ChannelOptions.writeBufferWaterMark, value: .init(low: 32768, high: 65536))
             .childChannelInitializer { channel in
                 guard let ip = channel.remoteAddress?.ipAddress,
-                      self.configuration.allowedClients.contains(ip),
-                      self.connections.count < self.configuration.maximumConnections else {
+                      self.configuration.allowedClients.contains(ip) else {
+                    self.log("connection_rejected reason=client")
                     return channel.close()
                 }
+                guard self.connections.count < self.configuration.maximumConnections else {
+                    self.log("connection_rejected reason=capacity")
+                    return channel.close()
+                }
+                self.log("connection_accepted")
                 let identifier = ObjectIdentifier(channel)
                 self.connections[identifier] = channel
                 channel.closeFuture.whenComplete { _ in self.connections.removeValue(forKey: identifier) }
@@ -118,10 +123,12 @@ private final class ConnectHandler: ChannelInboundHandler, RemovableChannelHandl
                   !request.headers.contains(name: "transfer-encoding"),
                   request.headers.first(name: "content-length").map({ $0 == "0" }) ?? true else {
                 rejected = true
+                server.log("connect_rejected reason=destination_or_request")
                 sendError(context.channel, status: .forbidden)
                 return
             }
             host = target
+            server.log("connect_accepted")
         case .body:
             rejected = true; sendError(context.channel, status: .badRequest)
         case .end:
@@ -157,12 +164,21 @@ private final class ConnectHandler: ChannelInboundHandler, RemovableChannelHandl
                 }.flatMap {
                     // The old decoder forwards any bytes pipelined after CONNECT through TLS.
                     channel.pipeline.syncOperations.removeHandler(self.decoder)
-                }.whenFailure { _ in channel.close(promise: nil) }
-            } catch { rejected = true; sendError(context.channel, status: .internalServerError) }
+                }.whenFailure { error in
+                    self.server.log("downstream_failed reason=\(transportFailureCategory(error))")
+                    channel.close(promise: nil)
+                }
+            } catch {
+                server.log("downstream_failed reason=certificate_setup")
+                rejected = true; sendError(context.channel, status: .internalServerError)
+            }
         }
     }
 
-    func errorCaught(context: ChannelHandlerContext, error: Error) { context.close(promise: nil) }
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
+        server.log("downstream_failed reason=\(transportFailureCategory(error))")
+        context.close(promise: nil)
+    }
 }
 
 func sendError(_ channel: Channel, status: HTTPResponseStatus) {
@@ -194,8 +210,10 @@ private final class HTTPConnection: ChannelInboundHandler {
                   head.method != .CONNECT, head.uri.hasPrefix("/"), !head.uri.hasPrefix("//"),
                   let authority = head.headers.first(name: "host")?.lowercased(),
                   authority == host || authority == host + ":443" else {
+                server.log("downstream_failed reason=http_request")
                 sendError(context.channel, status: .badRequest); return
             }
+            server.log("request_received")
             request = head
             if head.headers.first(name: "expect")?.lowercased() == "100-continue" {
                 context.channel.writeAndFlush(HTTPServerResponsePart.head(.init(version: .http1_1, status: .continue)), promise: nil)
@@ -234,7 +252,7 @@ private final class HTTPConnection: ChannelInboundHandler {
             self.relay = relay
             deadline = channel.eventLoop.scheduleTask(in: .seconds(60)) {
                 let expired = self.upstream
-                relay.fail(); expired?.close(promise: nil)
+                relay.fail(reason: "response_timeout"); expired?.close(promise: nil)
             }
             server.destination(host, on: channel.eventLoop).flatMap { address -> EventLoopFuture<Channel> in
                 guard channel.isActive else { return channel.eventLoop.makeFailedFuture(TransportError.upstreamClosed) }
@@ -258,8 +276,10 @@ private final class HTTPConnection: ChannelInboundHandler {
                     if !upstreamBody.isEmpty {
                         upstream.write(HTTPClientRequestPart.body(.byteBuffer(upstream.allocator.buffer(bytes: upstreamBody))), promise: nil)
                     }
-                    upstream.writeAndFlush(HTTPClientRequestPart.end(nil)).whenFailure { _ in relay.fail() }
-                case .failure: relay.fail()
+                    upstream.writeAndFlush(HTTPClientRequestPart.end(nil)).whenFailure { error in
+                        relay.fail(reason: transportFailureCategory(error))
+                    }
+                case .failure(let error): relay.fail(reason: transportFailureCategory(error))
                 }
             }
         }
@@ -279,5 +299,24 @@ private final class HTTPConnection: ChannelInboundHandler {
         abandoned?.close(promise: nil)
         context.fireChannelInactive()
     }
-    func errorCaught(context: ChannelHandlerContext, error: Error) { context.close(promise: nil) }
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
+        server.log("downstream_failed reason=\(transportFailureCategory(error))")
+        context.close(promise: nil)
+    }
+}
+
+/// Fixed categories only: never expose localized error descriptions, URLs, or TLS payloads.
+func transportFailureCategory(_ error: Error) -> String {
+    if let ssl = error as? NIOSSLError {
+        switch ssl {
+        case .handshakeFailed: return "tls_handshake"
+        case .uncleanShutdown: return "tls_closed"
+        default: return "tls"
+        }
+    }
+    if error is IOError { return "socket" }
+    if error is SocketAddressError { return "dns" }
+    if let error = error as? ChannelError, error == .connectTimeout(.seconds(15)) { return "connect_timeout" }
+    if error is TransportError { return "destination_or_transport" }
+    return "transport"
 }

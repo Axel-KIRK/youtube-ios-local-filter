@@ -12,7 +12,7 @@ This result covers one session with a local certificate explicitly trusted on th
 
 A later test using the **Swift HTTPS proxy and engine** also started videos without ads on the same phone. During the recorded window it rewrote 21 responses and passed 40 successful media responses. The Mac was still required. Three unclassified upstream failures were logged; they are preserved in the [Swift session record](evidence/swift-proxy-session.json), not hidden by the positive user report.
 
-On October 19, the app and embedded Network Extension were successfully signed and installed on that iPhone, and the app launched. The device was provisioned through an activated developer membership. This establishes development installation, not working autonomous filtering; see the [installation record](evidence/native-installation.json).
+On October 19, the app and embedded Network Extension were successfully signed and installed on that iPhone, and setup mode started. The device was provisioned through an activated developer membership. **The first autonomous filtering trial failed: YouTube did not load.** A subsequent check found only the old Mac certificate installed, despite the initial report that the new certificate was ready. This establishes development installation, not working autonomous filtering; see the [installation record](evidence/native-installation.json).
 
 ## Documentation
 

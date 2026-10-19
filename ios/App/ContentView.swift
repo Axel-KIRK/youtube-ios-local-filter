@@ -81,6 +81,12 @@ struct ContentView: View {
                                 .font(.footnote).foregroundStyle(.secondary)
                             Text("Rewritten responses are not a count of ads prevented.")
                                 .font(.caption).foregroundStyle(.secondary)
+                            Text("Connections: \(status.connections) · HTTPS tunnels: \(status.connectRequests) · Requests: \(status.decryptedRequests)")
+                                .font(.caption).foregroundStyle(.secondary)
+                            if let failure = status.lastFailure {
+                                Text("Last connection issue: \(failure)")
+                                    .font(.caption).foregroundStyle(.orange)
+                            }
                             if status.upstreamFailures > 0 {
                                 Text("\(status.upstreamFailures) connection errors. Stop the local connection if playback stalls.")
                                     .font(.footnote).foregroundStyle(.orange)

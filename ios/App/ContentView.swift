@@ -160,6 +160,9 @@ struct ContentView: View {
         let candidates = [
             "legacy-root": "App-prefs:root=General&path=ManagedConfigurationList/PurgatoryInstallRequested",
             "without-root": "App-prefs:General&path=ManagedConfigurationList/PurgatoryInstallRequested",
+            "profiles-root": "App-prefs:root=General&path=ManagedConfigurationList",
+            "profiles-without-root": "App-prefs:General&path=ManagedConfigurationList",
+            "profiles-prefs": "prefs:root=General&path=ManagedConfigurationList",
             "modern-profile": "settings-navigation://com.apple.Settings.General/ManagedConfigurationList/DownloadedProfile",
             "modern-profiles": "settings-navigation://com.apple.Settings.General/ManagedConfigurationList",
             "modern-general": "settings-navigation://com.apple.Settings.General"

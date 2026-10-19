@@ -164,5 +164,39 @@
       "freshDownloadEvidence": "The user reported downloading again; the subsequent screenshot independently confirmed Profile Downloaded visible in Settings"
     },
     "outcome": "No tested candidate reaches the exact installation submenu from LocalFilter. The root-Settings button was removed from normal setup. This is an unmet requirement, not a completed setup feature."
+  },
+  "profileListNavigationFollowUp": {
+    "date": "2026-10-19",
+    "baseCommit": "2ba9244",
+    "device": "iPhone SE (3rd generation), iOS 18.6.1 (22G90)",
+    "requestedDestination": "General \u2192 VPN & Device Management, accepted by the user as a preceding screen to investigate",
+    "routes": [
+      {
+        "name": "profiles-root",
+        "url": "App-prefs:root=General&path=ManagedConfigurationList",
+        "openAccepted": true,
+        "observed": "Main Settings, Profile Downloaded visible; no profile list"
+      },
+      {
+        "name": "profiles-without-root",
+        "url": "App-prefs:General&path=ManagedConfigurationList",
+        "openAccepted": true,
+        "observed": "Main Settings, Profile Downloaded visible; no profile list"
+      },
+      {
+        "name": "profiles-prefs",
+        "url": "prefs:root=General&path=ManagedConfigurationList",
+        "openAccepted": false,
+        "observed": "LocalFilter fallback guide; no Settings launch"
+      }
+    ],
+    "signedDebugBuild": "BUILD SUCCEEDED",
+    "installation": "success",
+    "normalAppLaunchRestored": true,
+    "normalSetupChanged": false,
+    "scope": "Three Debug-only dictionary entries added to the existing diagnostic probe; fixed-name boolean logs and private screenshots checked. No release behavior or filtering logic changed.",
+    "parentListReached": false,
+    "newerOSCoverage": "Not tested for these three variants",
+    "privateEvidence": "Screenshots and logs remain local; no personal screen content or device identifiers published"
   }
 }

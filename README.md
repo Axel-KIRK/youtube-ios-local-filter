@@ -2,7 +2,7 @@
 
 Research and development of a filter for the **official YouTube app on iPhone**. The approach removes advertising instructions sent to the player while allowing media to pass through.
 
-**Project status: a Mac-based proxy prototype worked during a live session. The standalone iOS app is not yet a usable ad blocker.** The product goal is a simple installation, a few confirmations in Settings, and a switch — with no computer or Developer Mode required for the end user.
+**Project status: a Mac-based proxy prototype worked during a live session. The standalone iOS app is not yet a usable ad blocker.** The product goal is **Start → Allow the system prompts → Ready**, without a setup guide, manual menu navigation, computer, or Developer Mode. The current certificate-based setup still requires navigation in Settings and does not meet that consumer-onboarding goal.
 
 ## October 18, 2026 results
 
@@ -15,6 +15,8 @@ A later test using the **Swift HTTPS proxy and engine** also started videos with
 On October 19, the app and embedded Network Extension were successfully signed and installed on that iPhone, and setup mode started. The device was provisioned through an activated developer membership. **The first autonomous filtering trial failed: YouTube did not load.** A subsequent check found only the old Mac certificate installed, despite the initial report that the new certificate was ready. This establishes development installation, not working autonomous filtering; see the [installation record](evidence/native-installation.json).
 
 The setup flow now checks real TLS trust before redirecting YouTube. The corrected build was tested on the phone with the new certificate still missing: it rejected activation and kept filtering off. iOS still requires the user to install and trust the downloaded certificate in Settings once. Autonomous ad removal remains unverified.
+
+Setup is now guided by the app: **Set up and enable** prepares the connection and opens the certificate download if needed. The app shows the two iOS approval steps, rechecks on return, and finishes activation automatically after a successful check. **Cancel setup** stops that continuation. Later starts use **Enable filtering** and recheck the connection. See the [setup procedure and platform limits](docs/NATIVE-PROTOTYPE.md#what-setup-can-automate).
 
 ## Documentation
 

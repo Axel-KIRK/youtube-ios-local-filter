@@ -11,6 +11,12 @@ final class ConnectionController: ObservableObject {
     @Published private(set) var busy = false
     @Published private(set) var checkingCertificate = false
     @Published private(set) var certificateVerified = false
+    @Published private(set) var certificateRequired = false
+    @Published private(set) var hasCompletedSetup = UserDefaults.standard.bool(forKey: "hasCompletedSetup")
+    // This is an activation request, never evidence that a certificate is trusted.
+    @Published private(set) var enableWhenReady = UserDefaults.standard.bool(forKey: "enableWhenReady") {
+        didSet { UserDefaults.standard.set(enableWhenReady, forKey: "enableWhenReady") }
+    }
     @Published var message: String?
     private var manager: NETunnelProviderManager?
     private var refreshing = false
@@ -18,6 +24,24 @@ final class ConnectionController: ObservableObject {
     private let diagnostics = Logger(subsystem: "com.axelkirk.localfilter", category: "setup")
 
     var running: Bool { [.connected, .connecting, .reasserting, .disconnecting].contains(connectionStatus) }
+    var filtering: Bool { connectionStatus == .connected && snapshot?.mode == .filter }
+    var certificateURL: URL? {
+        guard let text = snapshot?.certificateURL, let url = URL(string: text),
+              url.scheme == "http", url.host == "127.0.0.1", url.port != nil,
+              url.path == "/certificate.cer" else { return nil }
+        return url
+    }
+
+    /// Continue only a setup the user requested. Stop cancels this persisted intent.
+    func resumeSetup() async {
+        await refresh()
+        guard enableWhenReady else {
+            diagnostics.info("No setup request to resume")
+            return
+        }
+        guard !busy else { return }
+        await start(.filter)
+    }
 
     func refresh() async {
         guard !refreshing else { return }
@@ -51,13 +75,22 @@ final class ConnectionController: ObservableObject {
 
     func start(_ mode: ConnectionMode) async {
         guard !busy else { return }
+        if mode == .filter { enableWhenReady = true }
         busy = true; message = nil
         defer { busy = false; checkingCertificate = false }
         do {
+            if mode == .filter, filtering {
+                enableWhenReady = false
+                return
+            }
             certificateVerified = false
+            certificateRequired = false
             // Setup has no system proxy settings. Missing trust must never redirect YouTube.
-            try await connect(.setup)
-            try await waitForStatus(.setup)
+            // Reuse setup on return from Settings so its certificate download URL stays valid.
+            if connectionStatus != .connected || snapshot?.mode != .setup {
+                try await connect(.setup)
+                try await waitForStatus(.setup)
+            }
             if mode == .filter {
                 checkingCertificate = true
                 try await verifyCurrentCertificate()
@@ -66,6 +99,10 @@ final class ConnectionController: ObservableObject {
                 // Restart resets setup/probe counters before actual YouTube traffic is counted.
                 try await connect(.filter)
                 try await waitForStatus(.filter)
+                enableWhenReady = false
+                hasCompletedSetup = true
+                UserDefaults.standard.set(true, forKey: "hasCompletedSetup")
+                diagnostics.info("Guided setup complete; filtering enabled")
             }
         } catch let error as ConnectionPreflight.Failure {
             showPreflightFailure(error)
@@ -73,21 +110,9 @@ final class ConnectionController: ObservableObject {
         } catch {
             manager?.connection.stopVPNTunnel()
             certificateVerified = false
-            message = "The local connection could not start. Try preparing the connection again."
+            message = "The local connection could not start. Tap Try again to continue setup."
             await refresh()
         }
-    }
-
-    /// Recheck on return from Settings. No stored checkbox is treated as evidence of trust.
-    func checkCertificate() async {
-        guard !busy, snapshot?.mode == .setup else { return }
-        busy = true; checkingCertificate = true; message = nil
-        defer { busy = false; checkingCertificate = false }
-        do {
-            try await verifyCurrentCertificate()
-            certificateVerified = true
-        } catch let error as ConnectionPreflight.Failure { showPreflightFailure(error) }
-        catch { showPreflightFailure(.connectionUnavailable) }
     }
 
     private func verifyCurrentCertificate() async throws {
@@ -104,8 +129,10 @@ final class ConnectionController: ObservableObject {
         certificateVerified = false
         switch failure {
         case .certificateNotTrusted:
+            certificateRequired = true
             diagnostics.error("Certificate preflight failed: certificate_not_trusted; filtering remains off")
-            message = "The certificate check failed. Install LocalFilter Personal CA in Settings, then enable its full trust under General → About → Certificate Trust Settings. Filtering is still off."
+            // Expected during first setup: the view presents the installation guide, not an error wall.
+            message = nil
         case .connectionUnavailable:
             diagnostics.error("Certificate preflight failed: connection_unavailable; filtering remains off")
             message = "The connection check could not reach YouTube through the local proxy. Check your internet connection and try again. Filtering is still off."
@@ -154,14 +181,28 @@ final class ConnectionController: ObservableObject {
     }
 
     func stop() {
+        enableWhenReady = false
         manager?.connection.stopVPNTunnel()
         snapshot = nil
         certificateVerified = false
+        certificateRequired = false
+        message = nil
         connectionStatus = manager?.connection.status ?? .invalid
     }
 
+    #if DEBUG
+    /// Device diagnostics can exercise cancellation without a remote UI-tap service.
+    func stopSavedConnection() async {
+        enableWhenReady = false
+        while refreshing { try? await Task.sleep(nanoseconds: 20_000_000) }
+        await refresh()
+        stop()
+    }
+    #endif
+
     func removeConfiguration() async {
         guard !running, !busy else { return }
+        enableWhenReady = false
         busy = true
         defer { busy = false }
         do {

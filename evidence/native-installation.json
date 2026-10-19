@@ -81,5 +81,20 @@
       "filteringEnabled": false
     },
     "remaining": "User installation and trust approval in Settings, then a successful YouTube playback trial"
+  },
+  "guidedSetup": {
+    "date": "2026-10-19",
+    "implemented": "One primary action prepares the local connection, checks real TLS trust, opens the certificate download when needed, and resumes verification/activation after return or relaunch. Stop cancels the persisted activation request. Help and diagnostics are collapsed.",
+    "transportSetupTests": "11 passed; no failures",
+    "signedBuild": "BUILD SUCCEEDED",
+    "installation": "success",
+    "appLaunch": "success",
+    "deviceResumeTest": "An ordinary relaunch resumed the pending setup, reported certificate_not_trusted, and remained in setup mode without enabling filtering.",
+    "deviceCancellationTest": "The normal stop path was invoked through the Debug diagnostic launch option; a subsequent ordinary launch logged No setup request to resume. No automatic preflight/activation followed during the observation window.",
+    "layoutCheck": "Welcome screen and optional guide inspected on an iPhone SE (3rd generation) simulator running iOS 26.5; the main start button fits on the initial screen. This is a layout check, not a VPN or playback test.",
+    "settingsShortcut": "Removed Open Settings after user feedback confirmed it opened app-specific settings, not certificate installation. No private Settings URL scheme substituted.",
+    "consumerCriterion": "Start, accept presented system prompts, then Ready; no manual menu search or technical guide.",
+    "consumerCriterionMet": false,
+    "remaining": "Manual certificate installation and full trust remain required. Successful automatic activation after trust and autonomous YouTube playback still need a device trial."
   }
 }

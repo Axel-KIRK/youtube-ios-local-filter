@@ -2,9 +2,11 @@
 
 ## User goal
 
-Install an app, follow a few clearly explained confirmations in Settings, enable the filter, and continue using the official YouTube app. The end user should need no Mac, terminal, Developer Mode, or modified YouTube application. This repository targets **iOS only**.
+Install an app, tap **Start**, accept the necessary system prompts, and see **Ready**. The user should not need to read a setup guide, understand certificates, locate Settings menus, or decide which step to do next. Explicit approval is acceptable; manual configuration is not the intended consumer experience. The end user should need no Mac, terminal, Developer Mode, or modified YouTube application. This repository targets **iOS only**.
 
 This setup is the goal; the validated prototype still depends on a Mac. TestFlight/App Store distribution is separate from compilation and development installation.
+
+**The current certificate-based prototype does not meet this onboarding criterion.** The app automates preparation, download launch, connection verification, and activation on return. A personally managed iPhone still requires the user to navigate Settings to install the certificate and enable full trust. A clearer guide is an interim improvement, not completion of the consumer requirement. Apple's public Settings link opens only the app's settings; it cannot present the certificate approvals as an in-app sequence. Do not claim “Start → Allow → Ready” until that requirement is actually demonstrated on an ordinary iPhone. [Profile installation](https://support.apple.com/en-us/102400), [Certificate trust](https://support.apple.com/en-us/102390), [Public Settings link](https://developer.apple.com/documentation/uikit/uiapplication/opensettingsurlstring)
 
 ## Separate responsibilities
 
@@ -38,6 +40,7 @@ Trusting a manually installed certificate requires an action in Settings. The ap
 - The certificate key stays on the device; installations do not share an authority; personal requests are not collected.
 - A first launch without a key, key renewal, and an unknown schema still allow playback; the interface makes any absence of filtering visible.
 - Someone who did not participate in development can configure a second personal iPhone without a Mac or Developer Mode.
+- Onboarding needs only the primary app action and system approval prompts, with no manual menu search or technical instructions. The current certificate installation flow fails this criterion; a guided checklist does not count as passing it.
 - Pre-roll and mid-roll ads, multiple sessions, and multiple YouTube versions are tested. Errors and remaining ads are recorded with the relevant context.
 - Signing, Apple capabilities, and the distribution channel are validated before an installation link is offered. [VPN distribution rules](https://developer.apple.com/app-store/review/guidelines/#vpn-apps)
 

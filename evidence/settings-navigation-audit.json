@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-19",
+  "scope": "Diagnostic re-evaluation of Settings navigation; not a product feature",
+  "baseCommit": "d4d04e6",
+  "physicalDevice": {
+    "model": "iPhone SE (3rd generation)",
+    "iOS": "18.6.1",
+    "build": "22G90"
+  },
+  "harness": {
+    "entry": "Debug --settings-navigation-test",
+    "isolation": "Separate WindowGroup branch; does not construct ContentView or ConnectionController; no VPN start, TLS preflight, scene-resume callback, or launch-time URL open",
+    "invocation": "UIKit open(_:options:completionHandler:) synchronously from Button actions; no Task and no canOpenURL gate",
+    "positiveControl": "UIApplication.openSettingsURLString",
+    "vpn": "Normal Stop path invoked before opening the isolated view; clears pending automatic setup intent"
+  },
+  "signedBuild": "BUILD SUCCEEDED",
+  "installation": "success",
+  "observedManualCallbacks": {
+    "manual-control": {
+      "active": true,
+      "mainThread": true,
+      "accepted": true,
+      "destination": "User confirmed the LocalFilter-specific Settings page opened"
+    },
+    "manual-profiles-root": {
+      "active": true,
+      "mainThread": true,
+      "accepted": true,
+      "destination": "User reported that it does not reach the requested page; previous screenshots showed main Settings for these same URLs"
+    },
+    "manual-profiles-alternate": {
+      "active": true,
+      "mainThread": true,
+      "accepted": true,
+      "destination": "User reported that it does not reach the requested page; previous screenshots showed main Settings for these same URLs"
+    },
+    "manual-profiles-modern": {
+      "active": true,
+      "mainThread": true,
+      "accepted": false
+    },
+    "manual-profiles-prefs": {
+      "active": true,
+      "mainThread": true,
+      "accepted": false
+    }
+  },
+  "runtimeInspection": {
+    "runtime": "iOS 26.5 simulator, build 23F77",
+    "source": "RuntimeRoot/Applications/Preferences.app/Info.plist",
+    "urlRegistrations": [
+      {
+        "name": "Settings Location URL",
+        "schemes": [
+          "prefs"
+        ],
+        "privateFlag": true
+      },
+      {
+        "name": "Third Party App Settings",
+        "schemes": [
+          "app-prefs"
+        ],
+        "privateFlag": false
+      },
+      {
+        "name": "Settings Navigation",
+        "schemes": [
+          "settings-navigation"
+        ],
+        "privateFlag": true
+      }
+    ],
+    "limit": "This inspects one simulator runtime, not the physical iOS 18.6.1 system image. Private flags are implementation details, not a public compatibility contract."
+  },
+  "physicalDeviceRoutingEvidence": {
+    "source": "Separate live system-log capture on the same physical phone after the manual-button test",
+    "process": "Preferences",
+    "subsystem": "com.apple.SettingsApp",
+    "category": "URL Handling",
+    "message": "Route provider ApplicationPrefsURLRoute.Type discarded url 'App-prefs:root=General&path=ManagedConfigurationList'.",
+    "finding": "The URL reaches Settings, whose route provider discards it. An accepted UIApplication.open callback does not establish destination navigation.",
+    "systemProfileDownloadAction": "prefs:root=General&path=ManagedConfigurationList/PurgatoryInstallRequested",
+    "systemProfileDownloadActionSource": "The fixed URL in the system's Profile Downloaded follow-up action, observed in the same device log; no follow-up payload or personal metadata is published",
+    "interpretation": "The profile path exists inside iOS. Its existence in a system action does not mean a third-party app can invoke it: LocalFilter's direct prefs-scheme profile-list call returned false.",
+    "limit": "The log proves rejection by Settings for this App-prefs URL. It does not disclose the complete routing predicate, prove an entitlement-based denial for other schemes, or rule out every alternative navigation mechanism."
+  },
+  "infoPlistAudit": {
+    "canOpenURLUsed": false,
+    "finding": "LSApplicationQueriesSchemes constrains canOpenURL, not open(_:options:completionHandler:). Missing query declarations do not explain these direct open calls. Registering another app\u2019s incoming scheme with CFBundleURLTypes is not an outbound permission.",
+    "source": "https://developer.apple.com/documentation/uikit/uiapplication/canopenurl(_:)"
+  },
+  "privateEvidence": "Raw device logs and signing records remain local; only fixed diagnostic strings, URLs, public device model/OS metadata and booleans are published",
+  "result": "Official app-specific Settings navigation works from a real tap. Profile routes still fail with LocalFilter active on the main thread, without constructing its connection controller. The physical phone's Settings route provider explicitly discards the App-prefs profile-list URL. No working direct profile-list shortcut has been established.",
+  "userReport": "Button 1 works; the other buttons do not reach the requested page."
+}

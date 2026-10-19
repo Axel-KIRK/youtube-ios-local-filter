@@ -96,5 +96,73 @@
     "consumerCriterion": "Start, accept presented system prompts, then Ready; no manual menu search or technical guide.",
     "consumerCriterionMet": false,
     "remaining": "Manual certificate installation and full trust remain required. Successful automatic activation after trust and autonomous YouTube playback still need a device trial."
+  },
+  "profileNavigationExperiment": {
+    "date": "2026-10-19",
+    "baseCommit": "9101d2b",
+    "device": "iPhone SE (3rd generation), iOS 18.6.1 (22G90)",
+    "candidate": "App-prefs:root=General&path=ManagedConfigurationList/PurgatoryInstallRequested",
+    "observations": [
+      "Without a visible pending download, the candidate opened main Settings.",
+      "After a fresh user-confirmed download, main Settings showed Profile Downloaded, with the download confirmation still displayed.",
+      "After the user closed that confirmation, a second launch still opened main Settings with Profile Downloaded visible; the installation sheet did not open."
+    ],
+    "directInstallationNavigationVerified": false,
+    "simulator": "iPhone SE simulator, iOS 26.5, no pending profile: App-prefs opened main Settings; legacy prefs scheme was rejected.",
+    "implemented": "A temporary Debug button changed after opening the download URL and reached main Settings. It was removed from normal setup after the user clarified that only the exact installation submenu satisfies the request. Debug-only launch probes retain five bounded candidates and fixed-name/boolean logging.",
+    "trust": "Download/navigation callbacks do not establish installation or trust. Normal system-TLS verification remains required before filtering.",
+    "signedDebugBuild": "BUILD SUCCEEDED for the final version with the root-Settings button removed from normal setup",
+    "installation": "success; final signed Debug build installed before the four additional physical-device probes",
+    "buttonDeviceCheck": "User confirmed the temporary button changes and opens Settings, then explicitly clarified that this does not satisfy the request: the exact installation submenu must open. Root Settings is not accepted as completion.",
+    "release": "Final unsigned Release build succeeded; binary inspection confirmed App-prefs, settings-navigation, PurgatoryInstallRequested, and --probe-install-profile markers absent",
+    "consumerCriterionMet": false,
+    "remaining": "Manual Profile Downloaded tap, installation and full trust; successful autonomous playback; physical-device checks on newer iOS. YouTube cross-version trials explicitly deferred.",
+    "privateEvidence": "Screenshots and launch/build records stay local. No device identifiers, personal screenshots, certificate material, or account details included.",
+    "additionalSimulatorProbes": {
+      "environment": "iPhone SE simulator, iOS 26.5; no pending downloaded profile",
+      "modern-profile": {
+        "url": "settings-navigation://com.apple.Settings.General/ManagedConfigurationList/DownloadedProfile",
+        "openAccepted": false,
+        "observed": "LocalFilter stayed visible and displayed its fallback guide"
+      },
+      "modern-profiles": {
+        "url": "settings-navigation://com.apple.Settings.General/ManagedConfigurationList",
+        "openAccepted": false,
+        "observed": "LocalFilter stayed visible and displayed its fallback guide"
+      },
+      "modern-general": {
+        "url": "settings-navigation://com.apple.Settings.General",
+        "openAccepted": false,
+        "observed": "LocalFilter stayed visible and displayed its fallback guide"
+      },
+      "without-root": {
+        "url": "App-prefs:General&path=ManagedConfigurationList/PurgatoryInstallRequested",
+        "openAccepted": true,
+        "observed": "Main Settings after the transition; no installation sheet"
+      }
+    },
+    "appLaunch": "success; normal launch restored after diagnostic probes",
+    "additionalPhysicalDeviceProbes": {
+      "environment": "iPhone SE (3rd generation), iOS 18.6.1 (22G90)",
+      "modern-profile": {
+        "openAccepted": false,
+        "observed": "LocalFilter fallback guide; no Settings launch"
+      },
+      "modern-profiles": {
+        "openAccepted": false,
+        "observed": "LocalFilter fallback guide; no Settings launch"
+      },
+      "modern-general": {
+        "openAccepted": false,
+        "observed": "LocalFilter fallback guide; no Settings launch"
+      },
+      "without-root": {
+        "openAccepted": true,
+        "observed": "Main Settings both without a pending download and after a fresh download, with Profile Downloaded visibly present and no confirmation dialog covering the screen; installation sheet did not open"
+      },
+      "evidence": "Fixed-name callback logs plus screenshots retained privately",
+      "freshDownloadEvidence": "The user reported downloading again; the subsequent screenshot independently confirmed Profile Downloaded visible in Settings"
+    },
+    "outcome": "No tested candidate reaches the exact installation submenu from LocalFilter. The root-Settings button was removed from normal setup. This is an unmet requirement, not a completed setup feature."
   }
 }

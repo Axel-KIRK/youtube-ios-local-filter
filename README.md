@@ -18,6 +18,8 @@ The setup flow now checks real TLS trust before redirecting YouTube. The correct
 
 Setup is now guided by the app: **Set up and enable** prepares the connection and opens the certificate download if needed. The app shows the two iOS approval steps, rechecks on return, and finishes activation automatically after a successful check. **Cancel setup** stops that continuation. Later starts use **Enable filtering** and recheck the connection. See the [setup procedure and platform limits](docs/NATIVE-PROTOTYPE.md#what-setup-can-automate).
 
+Direct navigation to certificate installation remains unresolved. A temporary button reached main Settings on the test iPhone, which does not satisfy the requested exact destination; it was removed from the normal setup flow. Debug-only probes preserve the navigation experiments. Broader iOS coverage and later YouTube version checks are tracked in the [compatibility matrix](docs/COMPATIBILITY.md).
+
 ## Documentation
 
 - [Detailed experiments and final findings](docs/EXPERIMENTS-2026-10-18.md)
@@ -26,6 +28,7 @@ Setup is now guided by the app: **Set up and enable** prepares the connection an
 - [Swift engine, verification app, and build instructions](docs/DEVELOPMENT.md)
 - [Swift HTTPS proxy and transport checks](docs/SWIFT-PROXY.md)
 - [Native extension setup and device validation](docs/NATIVE-PROTOTYPE.md)
+- [iPhone, iOS, and YouTube compatibility requirements](docs/COMPATIBILITY.md)
 - [Apple signing and App Store assessment](docs/APPLE-DISTRIBUTION.md)
 - [Publishable session measurements](evidence/session-summary.json)
 - [Python source of the tested prototype](reference/proxy/)

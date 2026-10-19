@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 import NetworkExtension
 import LocalFilterCore
+import OSLog
 
 struct ContentView: View {
     @StateObject private var connection = ConnectionController()
@@ -80,6 +81,12 @@ struct ContentView: View {
                 // These operations must survive the inactive scene caused by an iOS permission prompt.
                 Task {
                     #if DEBUG
+                    if ProcessInfo.processInfo.arguments.contains("--probe-install-profile") {
+                        let route = ProcessInfo.processInfo.arguments.first { $0.hasPrefix("--profile-route=") }?
+                            .replacingOccurrences(of: "--profile-route=", with: "") ?? "legacy-root"
+                        await openCertificateSettings(route: route)
+                        return
+                    }
                     if ProcessInfo.processInfo.arguments.contains("--stop-local-connection") {
                         await connection.stopSavedConnection()
                         return
@@ -132,17 +139,41 @@ struct ContentView: View {
                 Text("Download certificate").frame(maxWidth: .infinity)
             }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-            Text("After the download, open Settings from your Home Screen. iOS does not provide this app with a direct link to certificate installation.")
+            Text("After the download, open Settings from your Home Screen. Direct navigation to certificate installation is still being investigated.")
                 .font(.caption).foregroundStyle(.secondary)
             CertificateGuide()
             DisclosureGroup("Need help?") {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("No “Profile Downloaded”? Look under General → VPN & Device Management, or download again. iOS removes uninstalled downloads after eight minutes.")
+                    Button("Download certificate again") { downloadCertificate() }
                     Button("Check again") { Task { await connection.start(.filter) } }
                 }.font(.subheadline).padding(.top, 10)
             }
         }
     }
+
+    #if DEBUG
+    private func openCertificateSettings(route: String) async {
+        // Undocumented experiments, excluded from Release. The legacy-root candidate
+        // opens Settings root on the tested iOS 18.6.1 phone, even with a fresh profile.
+        // A successful URL open is neither proof of the destination nor of trust.
+        let candidates = [
+            "legacy-root": "App-prefs:root=General&path=ManagedConfigurationList/PurgatoryInstallRequested",
+            "without-root": "App-prefs:General&path=ManagedConfigurationList/PurgatoryInstallRequested",
+            "modern-profile": "settings-navigation://com.apple.Settings.General/ManagedConfigurationList/DownloadedProfile",
+            "modern-profiles": "settings-navigation://com.apple.Settings.General/ManagedConfigurationList",
+            "modern-general": "settings-navigation://com.apple.Settings.General"
+        ]
+        guard let value = candidates[route], let url = URL(string: value) else { return }
+        let opened = await UIApplication.shared.open(url)
+        Logger(subsystem: "com.axelkirk.localfilter", category: "navigation")
+            .info("Settings probe \(route, privacy: .public): accepted=\(opened, privacy: .public)")
+        if !opened {
+            connection.message = "Open Settings from your Home Screen, then tap Profile Downloaded."
+            showingGuide = true
+        }
+    }
+    #endif
 
     private var activeContent: some View {
         VStack(alignment: .leading, spacing: 16) {

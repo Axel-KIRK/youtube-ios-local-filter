@@ -2,7 +2,7 @@
 
 Research and development of a filter for the **official YouTube app on iPhone**. The approach removes advertising instructions sent to the player while allowing media to pass through.
 
-**Project status: a Mac-based proxy prototype worked during a live session. The standalone iOS app is not yet a usable ad blocker.** The product goal is **Start → Allow the system prompts → Ready**, without a setup guide, manual menu navigation, computer, or Developer Mode. The current certificate-based setup still requires navigation in Settings and does not meet that consumer-onboarding goal.
+**Project status: a Mac-based proxy prototype worked during a live session. The standalone iOS app is not yet a usable ad blocker.** The long-term goal is minimal setup without a computer or Developer Mode. For the current prototype, the user accepted guided manual certificate installation and trust in Settings. Build 3 provides numbered instructions and does not require adding Shortcuts. Autonomous filtering still needs a successful device trial.
 
 ## October 18, 2026 results
 
@@ -18,7 +18,9 @@ The setup flow now checks real TLS trust before redirecting YouTube. The correct
 
 Setup is now guided by the app: **Set up and enable** prepares the connection and opens the certificate download if needed. The app remembers certificate delivery, offers separate installation and trust actions, rechecks on return, and finishes activation automatically after a successful check. See [what can actually be detected](docs/CERTIFICATE-SETUP-PROGRESS.md). **Cancel setup** stops that continuation. Later starts use **Enable filtering** and recheck the connection. See the [setup procedure and platform limits](docs/NATIVE-PROTOTYPE.md#what-setup-can-automate).
 
-Direct navigation to certificate installation remains unresolved on the physical iPhone. Direct app links reached only main Settings and are not used as a successful fallback. The new installation and trust buttons support prepared Shortcuts navigation; without distributable shortcuts, they explicitly show the manual paths. The [level-by-level bridge test](docs/SETTINGS-HIERARCHY-EXPERIMENT.md) now reaches General, the profile list, About, certificate trust settings, and the exact pending-profile installation sheet in the iOS 26.5 simulator. The last destination requires the complete observed profile identifier. Debug-only probes preserve these navigation experiments. Broader iOS coverage and later YouTube version checks are tracked in the [compatibility matrix](docs/COMPATIBILITY.md).
+The installation and trust buttons now open a [numbered guide](docs/GUIDED-CERTIFICATE-SETUP.md), with the exact French or English Settings labels, passcode/confirmation instructions, and recovery for a missing certificate. **Open Settings** uses Apple's app-settings link; the guide explains how to return to main Settings before following the menu path. It does not promise a direct system-submenu link. Build 3 was installed and its new setup screen observed on the test iPhone.
+
+Prepared Shortcuts did reach the profile list and certificate trust screen on the physical phone, but the user rejected that product dependency. The normal flow no longer imports or runs them; [the experiment record](docs/SHORTCUT-IMPORT.md) preserves the results and limits. Debug-only probes retain navigation research. Broader iOS coverage and later YouTube version checks are tracked in the [compatibility matrix](docs/COMPATIBILITY.md).
 
 ## Documentation
 
@@ -28,6 +30,7 @@ Direct navigation to certificate installation remains unresolved on the physical
 - [Swift engine, verification app, and build instructions](docs/DEVELOPMENT.md)
 - [Swift HTTPS proxy and transport checks](docs/SWIFT-PROXY.md)
 - [Native extension setup and device validation](docs/NATIVE-PROTOTYPE.md)
+- [Current certificate setup guide and device-test checklist](docs/GUIDED-CERTIFICATE-SETUP.md)
 - [iPhone, iOS, and YouTube compatibility requirements](docs/COMPATIBILITY.md)
 - [Apple signing and App Store assessment](docs/APPLE-DISTRIBUTION.md)
 - [Publishable session measurements](evidence/session-summary.json)

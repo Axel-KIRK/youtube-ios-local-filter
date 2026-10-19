@@ -84,15 +84,21 @@ struct ContentView: View {
                 }
             }
             .sheet(item: $settingsDestination) { destination in
-                CertificateSettingsHelp(destination: destination) {
-                    UserDefaults.standard.set(true, forKey: "navigationShortcutAdded." + destination.rawValue)
+                CertificateSettingsHelp(destination: destination, download: {
                     settingsDestination = nil
-                    runSettingsShortcut(destination)
-                }
+                    downloadCertificate()
+                }, check: {
+                    settingsDestination = nil
+                    Task { await connection.start(.filter) }
+                })
             }
             .onAppear {
                 guard !appeared else { return }
                 appeared = true
+                // Retire hints from the previous navigation experiment. They never represented trust.
+                for destination in [CertificateSettingsDestination.profiles, .trust] {
+                    UserDefaults.standard.removeObject(forKey: "navigationShortcutAdded." + destination.rawValue)
+                }
                 // These operations must survive the inactive scene caused by an iOS permission prompt.
                 Task {
                     #if DEBUG
@@ -116,6 +122,9 @@ struct ContentView: View {
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await connection.resumeSetup() } }
+            }
+            .onChange(of: connection.filtering) { _, filtering in
+                if filtering { settingsDestination = nil; showingGuide = false; pendingGuideDestination = nil }
             }
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
@@ -147,21 +156,8 @@ struct ContentView: View {
 
     private var certificateContent: some View {
         CertificateSetupView(progress: connection.certificateProgress,
-            download: downloadCertificate, navigate: { destination in
-                if UserDefaults.standard.bool(forKey: "navigationShortcutAdded." + destination.rawValue) {
-                    runSettingsShortcut(destination)
-                } else { settingsDestination = destination }
-            }, check: { Task { await connection.start(.filter) } })
-    }
-
-    private func runSettingsShortcut(_ destination: CertificateSettingsDestination) {
-        openURL(destination.runURL) { opened in
-            if !opened {
-                UserDefaults.standard.removeObject(forKey: "navigationShortcutAdded." + destination.rawValue)
-                connection.message = "Shortcuts could not open. Use Help and diagnostics for the setup steps."
-                settingsDestination = destination
-            }
-        }
+            download: downloadCertificate, navigate: { settingsDestination = $0 },
+            check: { Task { await connection.start(.filter) } })
     }
 
     #if DEBUG
@@ -218,12 +214,7 @@ struct ContentView: View {
         DisclosureGroup("Help and diagnostics") {
             VStack(alignment: .leading, spacing: 14) {
                 Button("Show setup guide") { showingGuide = true }
-                Button("Set up navigation buttons again") {
-                    for destination in [CertificateSettingsDestination.profiles, .trust] {
-                        UserDefaults.standard.removeObject(forKey: "navigationShortcutAdded." + destination.rawValue)
-                    }
-                    settingsDestination = .profiles
-                }
+                Text("Build \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—")")
                 if let status = connection.snapshot {
                     Text("Mode: \(status.mode.rawValue)")
                     Text("Connections: \(status.connections) · HTTPS tunnels: \(status.connectRequests) · Requests: \(status.decryptedRequests)")

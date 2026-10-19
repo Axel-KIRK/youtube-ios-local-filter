@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-19",
+  "app_version": "0.1.0",
+  "build": "3",
+  "normal_setup": "numbered manual guides; no shortcut creation, import, or invocation",
+  "builds": {
+    "debug_simulator": "passed",
+    "signed_debug_device": "passed"
+  },
+  "bundled_shortcut_assets": "none",
+  "physical_phone": {
+    "model": "iPhone SE (3rd generation)",
+    "ios": "18.6.1 (22G90)",
+    "installation": "succeeded",
+    "launch": "succeeded",
+    "observed": "new step 2 and step 3 guide buttons; waiting for certificate approval"
+  },
+  "simulator": {
+    "runtime": "iOS 26.5 (23F77)",
+    "layout": "SE-size",
+    "labels": "French",
+    "observed": [
+      "installation guide opened",
+      "next button opened full-trust guide",
+      "back button returned to installation guide",
+      "Open Settings launched Settings"
+    ],
+    "preview_starts_vpn": false
+  },
+  "setup_progress_semantics": "delivery is not installation; actual TLS preflight still gates activation",
+  "end_to_end_trial": "pending certificate installation, trust and fresh YouTube playback",
+  "engine_or_transport_changed": false,
+  "privacy": "raw phone screenshots and identifiers remain private"
+}

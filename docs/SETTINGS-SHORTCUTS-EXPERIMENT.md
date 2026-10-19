@@ -1,5 +1,7 @@
 # Settings navigation through Shortcuts
 
+> Historical experiment. Later physical-phone destination checks are recorded in [the import follow-up](SHORTCUT-IMPORT.md). Build 3 uses the [manual guide](GUIDED-CERTIFICATE-SETUP.md); normal setup no longer imports or runs Shortcuts.
+
 ## Observed result
 
 On the **iPhone SE simulator running iOS 26.5 (23F77)**, a real tap in LocalFilter opened **Settings → General → Device Management** through a saved shortcut. The visible French title was **Gestion de l’appareil**, with an empty profile list. Settings had first been returned to its root screen, so this was destination navigation rather than restoration of the last screen.

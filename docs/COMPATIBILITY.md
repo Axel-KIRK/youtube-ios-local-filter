@@ -4,9 +4,11 @@
 
 The initial consumer target starts with the existing test phone, an **iPhone SE (3rd generation) running iOS 18.6.1**, and extends to newer iPhones and newer iOS versions. This is a target, not a claim that all combinations work. The project's iOS 17 deployment target is a build setting; it does not establish tested support for iOS 17.
 
-Setup must remain a sequence of primary actions and system approvals, without finding Settings menus or reading a technical guide. A working shortcut on one iOS version does not satisfy that requirement on other versions. Navigation behavior depends on the OS; hardware, screen size, background execution, and resource use also need device checks.
+The long-term consumer goal is a sequence of primary actions and system approvals. For the current prototype, the user accepted precise manual Settings instructions in Build 3, with no Shortcuts dependency. A working shortcut on one iOS version does not satisfy that requirement on other versions. Navigation behavior depends on the OS; hardware, screen size, background execution, and resource use also need device checks.
 
 ## Current evidence
+
+Historical rows preserve the requirements and observations at the time of each experiment. The latest prototype decision accepts manual navigation; it does not turn earlier failed direct-link tests into successful ones.
 
 | Environment | What was checked | Result and limit |
 | --- | --- | --- |
@@ -21,15 +23,18 @@ Setup must remain a sequence of primary actions and system approvals, without fi
 | Same physical phone, iOS 18.6.1 | Legacy links to VPN & Device Management (parent list) | Both `App-prefs:` variants opened main Settings; `prefs:` was rejected. Callback results and actual screens checked; Profile Downloaded was visible at root. None reached the parent list. |
 | Same physical phone, iOS 18.6.1 | Isolated manual-button navigation audit and system routing logs | Official app-settings control worked. Profile routes failed with the app active on the main thread and no connection controller. Settings explicitly logged that it discarded the `App-prefs:` profile-list URL. See the [sanitized audit](../evidence/settings-navigation-audit.json). |
 | iPhone SE simulator, iOS 26.5 | LocalFilter → saved Shortcuts action → profile list | A real tap in LocalFilter opened Device Management after Settings had been reset to root. The shortcut was created manually in the simulator. Signed import, physical-phone behavior, and consumer setup remain unverified. See the [Shortcuts experiment](SETTINGS-SHORTCUTS-EXPERIMENT.md). |
+| Same physical phone, iOS 18.6.1 | Existing, iCloud-synced profile and trust helpers invoked by isolated Build 2 diagnostic | Both destination headings observed. Clean consumer import was not demonstrated. Shortcuts were subsequently removed from normal setup at the user’s request; see the [historical record](SHORTCUT-IMPORT.md). |
+| Same physical phone, iOS 18.6.1 | Build 3 installed and launched | New numbered certificate-guide buttons observed; certificate approval still pending. This does not establish autonomous playback. |
+| iPhone SE-size simulator, iOS 26.5 | Build 3 French guide layout and button navigation | Installation and full-trust guides opened; next/back actions worked. No real CA trust or VPN was exercised in the preview. |
 | Other physical iPhones and newer iOS releases | Setup, trust, local transport, playback, background operation | Not yet tested. |
 
 No row represents a general promise of compatibility with future iOS releases. Record the exact OS build, device model, app revision, expected destination, and observed destination for each test. Keep device identifiers and screenshots containing personal information out of the public repository.
 
-## Shortcut acceptance
+## Navigation acceptance
 
 Opening a URL successfully is not proof that it reached the intended screen. Check the actual destination with a fresh pending download, after dismissal of the download dialog, after cancellation, and after the pending profile expires. Test both returning from Settings and relaunching LocalFilter. Never treat download launch or a navigation result as proof of installation or trust; the real TLS check must still pass before filtering starts.
 
-The public app-settings link does not open certificate installation. Undocumented schemes are experiments only: Apple states that they are unsupported and may stop working. A shortcut that opens the wrong screen must not be labeled as a verified direct link. A manual fallback can keep the prototype usable, but does not pass the consumer onboarding requirement. [Apple's supported URL schemes](https://developer.apple.com/forums/thread/761314), [Profile download expiry and installation](https://support.apple.com/en-us/102400).
+The public app-settings link does not open certificate installation. Undocumented schemes are experiments only: Apple states that they are unsupported and may stop working. A shortcut that opens the wrong screen must not be labeled as a verified direct link. The guided manual path is now the accepted prototype workflow; it does not demonstrate the long-term approval-only consumer goal. [Apple's supported URL schemes](https://developer.apple.com/forums/thread/761314), [Profile download expiry and installation](https://support.apple.com/en-us/102400).
 
 ### Current Debug experiment
 

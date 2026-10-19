@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-19",
+  "status": "historical experiment; removed from normal setup in build 3",
+  "unsigned_simulator_import": "file handoff worked; Shortcuts rejected unsigned source",
+  "signing_after_icloud_login": "two attempts failed with NSURLErrorDomain code 504",
+  "shared_link_import": "not verified; simulator gallery connection failed, phone loading state only",
+  "physical_phone": {
+    "model": "iPhone SE (3rd generation)",
+    "ios": "18.6.1 (22G90)",
+    "build": "2",
+    "helper_delivery": "iCloud synchronization, not clean import",
+    "observed_headings": [
+      "VPN et gestion de l’appareil",
+      "Réglages des certificats"
+    ]
+  },
+  "localfilter_certificate_at_checkpoint": "not installed; only earlier Mac certificate visible",
+  "certificate_installation_or_trust_changed": false,
+  "decision": "user rejected Shortcuts dependency; use numbered manual setup guides",
+  "privacy": "account links, raw screenshots and device identifiers excluded"
+}

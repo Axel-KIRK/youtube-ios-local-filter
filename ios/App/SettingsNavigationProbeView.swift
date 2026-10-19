@@ -3,6 +3,19 @@ import SwiftUI
 import UIKit
 import OSLog
 
+// Historical navigation experiments only. Normal setup uses the manual guide.
+extension CertificateSettingsDestination {
+    var settingsURL: String {
+        self == .profiles ? "prefs:root=General&path=ManagedConfigurationList"
+            : "prefs:root=General&path=About/CERT_TRUST_SETTINGS"
+    }
+    var runURL: URL {
+        var url = URLComponents(string: "shortcuts://run-shortcut")!
+        url.queryItems = [URLQueryItem(name: "name", value: self == .profiles ? "LocalFilter Profiles" : "LocalFilter Trust")]
+        return url.url!
+    }
+}
+
 /// Isolated navigation diagnostic: no connection controller, VPN setup, or foreground tasks.
 /// Every open call runs directly inside a Button action, with an official positive control.
 struct SettingsNavigationProbeView: View {

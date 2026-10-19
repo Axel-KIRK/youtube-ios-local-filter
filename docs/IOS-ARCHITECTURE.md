@@ -40,7 +40,7 @@ Trusting a manually installed certificate requires an action in Settings. The ap
 - The certificate key stays on the device; installations do not share an authority; personal requests are not collected.
 - A first launch without a key, key renewal, and an unknown schema still allow playback; the interface makes any absence of filtering visible.
 - Someone who did not participate in development can configure a second personal iPhone without a Mac or Developer Mode.
-- Onboarding needs only the primary app action and system approval prompts, with no manual menu search or technical instructions. The current certificate installation flow fails this criterion; a guided checklist does not count as passing it.
+- Onboarding needs only the primary app action and system approval prompts, with no manual menu search or technical instructions. This remains a long-term consumer goal. For the current prototype, the user accepted manual navigation with precise in-app instructions; that exception does not establish an approval-only consumer flow.
 - Cover the baseline iPhone SE (3rd generation) on iOS 18.6.1 and newer iPhones/iOS versions with recorded results. A build target or one successful shortcut is not evidence of broad compatibility; see the [compatibility matrix](COMPATIBILITY.md).
 - Pre-roll and mid-roll ads, multiple sessions, and multiple YouTube versions are tested. Errors and remaining ads are recorded with the relevant context.
 - Signing, Apple capabilities, and the distribution channel are validated before an installation link is offered. [VPN distribution rules](https://developer.apple.com/app-store/review/guidelines/#vpn-apps)

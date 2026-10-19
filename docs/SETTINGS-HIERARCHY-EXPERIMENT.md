@@ -1,5 +1,7 @@
 # Settings navigation, one level at a time
 
+> Historical experiment. Later physical-phone destination checks are recorded in [the import follow-up](SHORTCUT-IMPORT.md). Build 3 uses the [manual guide](GUIDED-CERTIFICATE-SETUP.md); normal setup no longer imports or runs Shortcuts.
+
 ## Observed result
 
 On October 19, 2026, real taps in LocalFilter's Debug screen reached every level below through a saved Shortcuts helper in the **iOS 26.5 simulator**:
